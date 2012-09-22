@@ -119,4 +119,13 @@ public final class StringUtil {
   public static String readToString(final InputStream inputStream) {
     return new Scanner(inputStream).useDelimiter("\\A").next();
   }
+  
+  public static String escapeToPureHtmlUnicode(final String s) {
+      final StringBuilder result = new StringBuilder();
+      for (int i = 0; i < s.codePointCount(0, s.length()); ++i) {
+          final int codePoint = s.codePointAt(i);
+          result.append(String.format(String.format ("&#x%x;", codePoint)));
+      }
+      return result.toString();
+  }
 }

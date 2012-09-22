@@ -35,9 +35,15 @@ public final class ListUtil {
   }
   
   public static final <T> void swap(final List<T> list, int i1, int i2) {
+    if (i1 == i2) { return; }
     T temp = list.get(i1);
     list.set(i1,list.get(i2));
     list.set(i2, temp);
+  }
+  
+  public static final <T> T fastRemoveWithReorder(final List<T> list, final int index) {
+      swap(list, index, list.size() - 1);
+      return list.remove(list.size() - 1);
   }
   
 

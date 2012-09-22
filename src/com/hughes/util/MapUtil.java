@@ -42,5 +42,13 @@ public class MapUtil {
     }
     return map.get(key);
   }
+  
+  public static <K,V> V safeRemove(final Map<K,V> map, K key, V defaultValue) {
+      if (!map.containsKey(key)) {
+        return defaultValue;
+      }
+      return map.remove(key);
+    }
+
 
 }
