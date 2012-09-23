@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -83,5 +84,11 @@ public final class FileUtil {
     in.close();
     return result.toString();
   }
+
+  public static void printString(final File file, final String s) throws IOException {
+      final PrintStream out = new PrintStream(new FileOutputStream(file));
+      out.print(s);
+      out.close();
+    }
 
 }
