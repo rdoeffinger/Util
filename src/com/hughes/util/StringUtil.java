@@ -128,4 +128,13 @@ public final class StringUtil {
       }
       return result.toString();
   }
+
+  public static final Pattern ALL_ASCII = Pattern.compile("[\\p{ASCII}]*");
+  
+  public static boolean isAscii(final String s) {
+      return ALL_ASCII.matcher(s).matches();
+  }
+  
 }
+
+
