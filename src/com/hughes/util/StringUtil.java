@@ -14,10 +14,15 @@
 
 package com.hughes.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public final class StringUtil {
 
@@ -135,6 +140,21 @@ public final class StringUtil {
       return ALL_ASCII.matcher(s).matches();
   }
   
+  public static final byte[] zipBytes(final byte[] bytes) throws IOException {
+      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      final GZIPOutputStream out = new GZIPOutputStream(baos);
+      out.write(bytes);
+      out.close();
+      return baos.toByteArray();
+  }
+
+  public static final void unzipfully(final byte[] inBytes, final byte[] outBytes) throws IOException {
+      final ByteArrayInputStream bais = new ByteArrayInputStream(inBytes);
+      final GZIPInputStream in = new GZIPInputStream(bais);
+      int numRead = 0;
+      while (numRead = in.read(outBytes, numRead, ))
+  }
+
 }
 
 
