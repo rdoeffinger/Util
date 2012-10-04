@@ -148,11 +148,13 @@ public final class StringUtil {
       return baos.toByteArray();
   }
 
-  public static final void unzipfully(final byte[] inBytes, final byte[] outBytes) throws IOException {
+  public static final void unzipFully(final byte[] inBytes, final byte[] outBytes) throws IOException {
       final ByteArrayInputStream bais = new ByteArrayInputStream(inBytes);
       final GZIPInputStream in = new GZIPInputStream(bais);
       int numRead = 0;
-      while (numRead = in.read(outBytes, numRead, ))
+      while ((numRead += in.read(outBytes, numRead, outBytes.length - numRead)) < outBytes.length) {
+          // Keep going.
+      }
   }
 
 }

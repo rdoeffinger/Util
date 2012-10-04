@@ -14,6 +14,7 @@
 
 package com.hughes.util;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
@@ -32,7 +33,18 @@ public class StringUtilTest extends TestCase {
 
     sb = new StringBuilder("a<!--asdfasdf-->b<!---> -->c<!---->d");
     assertEquals("abcd", StringUtil.removeAll(sb, Pattern.compile("<!--", Pattern.LITERAL), Pattern.compile("-->", Pattern.LITERAL)).toString());
-
   }
+
+  public void testZip() throws IOException {
+      String in = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
+      byte[] inBytes = in.getBytes();
+      byte[] zipBytes = StringUtil.zipBytes(inBytes);
+      System.out.println("zipped " + inBytes.length + " bytes to " + zipBytes.length + " bytes.");
+      assert zipBytes.length < inBytes.length;
+      byte[] unzipBytes = new byte[inBytes.length];
+      StringUtil.unzipFully(zipBytes, unzipBytes);
+      String out = new String(unzipBytes);
+      assertEquals(in, out);
+    }
 
 }
