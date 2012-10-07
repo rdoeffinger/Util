@@ -156,6 +156,10 @@ public final class StringUtil {
           // Keep going.
       }
   }
+  
+  public static boolean isNullOrEmpty(final String s) {
+      return s == null || s.equals("");
+  }
 
 }
 
