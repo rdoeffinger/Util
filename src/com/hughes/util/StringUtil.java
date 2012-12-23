@@ -25,6 +25,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public final class StringUtil {
+    
+    static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    
+    public static String normalizeWhitespace(final String s) {
+        return WHITESPACE.matcher(s.trim()).replaceAll(" ");
+    }
 
   public static String reverse(final String s) {
     final StringBuilder builder = new StringBuilder(s);
