@@ -26,8 +26,6 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.management.RuntimeErrorException;
-
 public final class StringUtil {
 
     static final Pattern WHITESPACE = Pattern.compile("\\s+");
