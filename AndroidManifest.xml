@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hughes.util"
-    android:versionCode="2"
-    android:versionName="2.0" >
+    android:versionCode="3"
+    android:versionName="2.1" >
 
     <uses-sdk
         android:minSdkVersion="4"
-        android:targetSdkVersion="17" />
+        android:targetSdkVersion="19" />
 
     <application
         android:allowBackup="true">
