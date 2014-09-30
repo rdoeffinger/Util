@@ -170,6 +170,16 @@ public final class StringUtil {
         }
         return false;
     }
+    
+    public static boolean isDigits(String name) {
+        for (int i = 0; i < name.length(); ++i) {
+            if (!isDigit(name.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     public static boolean isUnreservedUrlCharacter(final char c) {
         if (isLatinLetter(c)) {
@@ -246,5 +256,6 @@ public final class StringUtil {
     public static boolean isNullOrEmpty(final String s) {
         return s == null || s.equals("");
     }
+
 
 }

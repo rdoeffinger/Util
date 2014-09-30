@@ -84,6 +84,10 @@ public final class FileUtil {
     in.close();
     return result.toString();
   }
+  
+  public static void writeStringToUTF8File(final String string, final File file) {
+      throw new IllegalStateException();
+  }
 
   public static void printString(final File file, final String s) throws IOException {
       final PrintStream out = new PrintStream(new FileOutputStream(file));
