@@ -17,33 +17,41 @@ package com.hughes.util;
 import java.util.List;
 
 public final class ListUtil {
-  
-  public static final <T> T getLast(final List<T> list) {
-    return list.get(list.size() - 1);
-  }
-  
-  public static <T> T get(final List<T> list, final int index, final T defaultValue) {
-    return index < list.size() ? list.get(index) : defaultValue;
-  }
 
-  public static <T> T get(final List<T> list, final int index) {
-    return get(list, index, null);
-  }
+    public static final <T> T getLast(final List<T> list) {
+        return list.get(list.size() - 1);
+    }
 
-  public static <T> T remove(final List<T> list, final int index, final T defaultValue) {
-    return index < list.size() ? list.remove(index) : defaultValue;
-  }
-  
-  public static final <T> void swap(final List<T> list, int i1, int i2) {
-    if (i1 == i2) { return; }
-    T temp = list.get(i1);
-    list.set(i1,list.get(i2));
-    list.set(i2, temp);
-  }
-  
-  public static final <T> T fastRemoveWithReorder(final List<T> list, final int index) {
-      swap(list, index, list.size() - 1);
-      return list.remove(list.size() - 1);
-  }
-  
+    public static <T> T get(final List<T> list, final int index, final T defaultValue) {
+        return index < list.size() ? list.get(index) : defaultValue;
+    }
+
+    public static <T> T get(final List<T> list, final int index) {
+        return get(list, index, null);
+    }
+
+    public static <T> T remove(final List<T> list, final int index, final T defaultValue) {
+        return index < list.size() ? list.remove(index) : defaultValue;
+    }
+    
+    public static <T> T removeLast(List<T> l) {
+        T last = l.get(l.size() - 1);
+        l.remove(l.size() - 1);
+        return last;
+    }
+
+    public static final <T> void swap(final List<T> list, int i1, int i2) {
+        if (i1 == i2) {
+            return;
+        }
+        T temp = list.get(i1);
+        list.set(i1, list.get(i2));
+        list.set(i2, temp);
+    }
+
+    public static final <T> T fastRemoveWithReorder(final List<T> list, final int index) {
+        swap(list, index, list.size() - 1);
+        return list.remove(list.size() - 1);
+    }
+
 }

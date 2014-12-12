@@ -254,7 +254,15 @@ public final class StringUtil {
     }
 
     public static boolean isNullOrEmpty(final String s) {
-        return s == null || s.equals("");
+        return s == null || s.length() == 0;
+    }
+
+    public static String replaceLast(String s, String search, String replaceWith) {
+        final int i = s.lastIndexOf(search);
+        if (i != -1) {
+            return s.substring(0, i) + replaceWith + s.substring(i + search.length(), s.length());
+        }
+        return s;
     }
 
 
