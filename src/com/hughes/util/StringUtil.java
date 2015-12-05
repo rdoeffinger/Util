@@ -139,7 +139,7 @@ public final class StringUtil {
         final StringBuilder result = new StringBuilder();
         for (int i = 0; i < s.codePointCount(0, s.length()); ++i) {
             final int codePoint = s.codePointAt(i);
-            if (codePoint == (char) codePoint && isLatinLetter((char) codePoint)) {
+            if (codePoint == (char) codePoint && isPureHtml((char) codePoint)) {
                 result.append(Character.valueOf((char) codePoint));
             } else {
                 result.append(String.format(String.format("&#x%x;", codePoint)));
@@ -159,6 +159,10 @@ public final class StringUtil {
             return true;
         }
         return c >= 'a' && c <= 'z';
+    }
+
+    public static boolean isPureHtml(final char c) {
+        return c <= 127 && c != '<' && c != '>' && c != '&' && c != '\'' && c != '"';
     }
 
     public static boolean isDigit(final char c) {
