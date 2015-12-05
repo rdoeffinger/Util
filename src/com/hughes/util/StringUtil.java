@@ -158,17 +158,11 @@ public final class StringUtil {
         if (c >= 'A' && c <= 'Z') {
             return true;
         }
-        if (c >= 'a' && c <= 'z') {
-            return true;
-        }
-        return false;
+        return c >= 'a' && c <= 'z';
     }
 
     public static boolean isDigit(final char c) {
-        if (c >= '0' && c <= '9') {
-            return true;
-        }
-        return false;
+        return c >= '0' && c <= '9';
     }
     
     public static boolean isDigits(String name) {
@@ -188,19 +182,16 @@ public final class StringUtil {
         if (isDigit(c)) {
             return true;
         }
-        if (c == '-' || c == '_' || c == '.' || c == '~') {
-            return true;
-        }
-        return false;
+        return c == '-' || c == '_' || c == '.' || c == '~';
     }
 
-    public static final Charset UTF8 = Charset.forName("UTF8");
+    public static final Charset UTF8 = Charset.forName("UTF-8");
 
     public static String encodeForUrl(final String s) {
         final StringBuilder result = new StringBuilder();
         byte[] bytes;
         try {
-            bytes = s.getBytes("UTF8");
+            bytes = s.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -229,7 +220,7 @@ public final class StringUtil {
             }
         }
         try {
-            return bytes.toString("UTF8");
+            return bytes.toString("UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
