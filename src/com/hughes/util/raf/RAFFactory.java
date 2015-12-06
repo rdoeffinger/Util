@@ -14,11 +14,11 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public interface RAFFactory<T> {
   
-  T create(final RandomAccessFile raf) throws IOException;
+  T create(final DataInput raf) throws IOException;
 
 }

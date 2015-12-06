@@ -14,8 +14,9 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 
 public class RAFSerializableSerializer<T extends RAFSerializable<T>>  implements RAFSerializer<T> {
@@ -27,12 +28,12 @@ public class RAFSerializableSerializer<T extends RAFSerializable<T>>  implements
   }
 
   @Override
-  public void write(RandomAccessFile raf, T t) throws IOException {
+  public void write(DataOutput raf, T t) throws IOException {
     t.write(raf);
   }
 
   @Override
-  public T read(RandomAccessFile raf) throws IOException {
+  public T read(DataInput raf) throws IOException {
     return factory.create(raf);
   }
 

@@ -14,8 +14,9 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.List;
 
 import com.hughes.util.IndexedObject;
@@ -29,13 +30,13 @@ public class IndexedObjectSerializer<T extends IndexedObject> implements RAFSeri
   }
 
   @Override
-  public T read(RandomAccessFile raf) throws IOException {
+  public T read(DataInput raf) throws IOException {
     final int index = raf.readInt();
     return list.get(index);
   }
 
   @Override
-  public void write(RandomAccessFile raf, T t) throws IOException {
+  public void write(DataOutput raf, T t) throws IOException {
     raf.writeInt(t.index());
   }
 

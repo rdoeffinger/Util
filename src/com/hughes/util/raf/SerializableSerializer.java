@@ -16,17 +16,18 @@ package com.hughes.util.raf;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
 
 
 public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
   @Override
-  public void write(RandomAccessFile raf, T t) throws IOException {
+  public void write(DataOutput raf, T t) throws IOException {
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final ObjectOutputStream oos = new ObjectOutputStream(baos);
     oos.writeObject(t);
@@ -38,10 +39,10 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public T read(RandomAccessFile raf) throws IOException {
+  public T read(DataInput raf) throws IOException {
     final int length = raf.readInt();
     final byte[] bytes = new byte[length];
-    raf.read(bytes);
+    raf.readFully(bytes);
     final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     final ObjectInputStream ois = new ObjectInputStream(bais);
     Serializable result;

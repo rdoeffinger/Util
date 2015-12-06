@@ -14,11 +14,11 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public interface RAFSerializable<T> {
 
-  void write(final RandomAccessFile raf) throws IOException;
+  void write(final DataOutput raf) throws IOException;
 
 }

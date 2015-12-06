@@ -14,6 +14,8 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.AbstractList;
@@ -107,12 +109,12 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
       final int datumSize) throws IOException {
     write(raf, list, new RAFListSerializer<T>() {
       @Override
-      public T read(RandomAccessFile raf, final int readIndex)
+      public T read(DataInput raf, final int readIndex)
           throws IOException {
         return serializer.read(raf);
       }
       @Override
-      public void write(RandomAccessFile raf, T t) throws IOException {
+      public void write(DataOutput raf, T t) throws IOException {
         serializer.write(raf, t);
       }}, datumSize);
   }

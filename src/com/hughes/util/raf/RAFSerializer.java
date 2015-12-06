@@ -14,24 +14,25 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
 
 public interface RAFSerializer<T> {
 
-  public void write(final RandomAccessFile raf, final T t) throws IOException;
+  public void write(final DataOutput raf, final T t) throws IOException;
 
-  public T read(final RandomAccessFile raf) throws IOException;
+  public T read(final DataInput raf) throws IOException;
 
   public static final RAFSerializer<String> STRING = new RAFSerializer<String>() {
     @Override
-    public void write(RandomAccessFile raf, String t) throws IOException {
+    public void write(DataOutput raf, String t) throws IOException {
       raf.writeUTF(t);
     }
 
     @Override
-    public String read(RandomAccessFile raf) throws IOException {
+    public String read(DataInput raf) throws IOException {
       return raf.readUTF();
     }
   };
@@ -42,19 +43,19 @@ public interface RAFSerializer<T> {
     
     public RAFSerializableSerializer(final Class<T> clazz) {
       try {
-        this.constructor = clazz.getConstructor(RandomAccessFile.class);
+        this.constructor = clazz.getConstructor(DataInput.class);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
     
     @Override
-    public void write(RandomAccessFile raf, T t) throws IOException {
+    public void write(DataOutput raf, T t) throws IOException {
       t.write(raf);
     }
 
     @Override
-    public T read(RandomAccessFile raf) throws IOException {
+    public T read(DataInput raf) throws IOException {
       try {
         return constructor.newInstance(raf);
       } catch (Exception e) {
