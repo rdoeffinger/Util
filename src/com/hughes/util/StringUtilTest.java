@@ -53,8 +53,7 @@ public class StringUtilTest extends TestCase {
         byte[] zipBytes = StringUtil.zipBytes(inBytes);
         System.out.println("zipped " + inBytes.length + " bytes to " + zipBytes.length + " bytes.");
         assert zipBytes.length < inBytes.length;
-        byte[] unzipBytes = new byte[inBytes.length];
-        StringUtil.unzipFully(zipBytes, unzipBytes);
+        byte[] unzipBytes = StringUtil.unzipFully(zipBytes, -1);
         String out = new String(unzipBytes);
         assertEquals(in, out);
     }

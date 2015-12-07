@@ -16,15 +16,19 @@ package com.hughes.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterOutputStream;
 
 public final class StringUtil {
 
@@ -230,22 +234,63 @@ public final class StringUtil {
         }
     }
 
+    public static void writeVarInt(DataOutput f, int v) throws IOException {
+        if (v < 0 || v >= 16 * 256 * 256 * 256) {
+            f.writeByte(240);
+            f.writeInt(v);
+	} else if (v < 128) {
+            f.writeByte(v);
+        } else if (v < 64 * 256) {
+            f.writeShort(v + 128 * 256);
+        } else if (v < 32 * 256 * 256) {
+            f.writeByte((v >> 16) + 192);
+            f.writeShort(v);
+        } else {
+            f.writeShort((v >> 16) + 224 * 256);
+            f.writeShort(v);
+        }
+    }
+
+    public static int readVarInt(DataInput f) throws IOException {
+        int v = f.readUnsignedByte();
+        if (v < 128)
+            return v;
+        if (v < 192)
+            return ((v - 128) << 8) + f.readUnsignedByte();
+        if (v < 224)
+            return ((v - 192) << 16) + f.readUnsignedShort();
+        if (v < 240) {
+            v = ((v - 224) << 16) + f.readUnsignedShort();
+            return (v << 8) + f.readUnsignedByte();
+        }
+        return f.readInt();
+    }
+
     public static final byte[] zipBytes(final byte[] bytes) throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final GZIPOutputStream out = new GZIPOutputStream(baos);
+        final OutputStream out = new DeflaterOutputStream(baos);
         out.write(bytes);
         out.close();
         return baos.toByteArray();
     }
 
-    public static final void unzipFully(final byte[] inBytes, final byte[] outBytes)
+    public static final byte[] unzipFully(final byte[] inBytes, final int size)
             throws IOException {
+        if (size == -1) {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final OutputStream out = new InflaterOutputStream(baos);
+            out.write(inBytes);
+            out.close();
+            return baos.toByteArray();
+        }
+        byte[] outBytes = new byte[size];
         final ByteArrayInputStream bais = new ByteArrayInputStream(inBytes);
-        final GZIPInputStream in = new GZIPInputStream(bais);
+        final InputStream in = new GZIPInputStream(bais);
         int numRead = 0;
         while ((numRead += in.read(outBytes, numRead, outBytes.length - numRead)) < outBytes.length) {
             // Keep going.
         }
+        return outBytes;
     }
 
     public static boolean isNullOrEmpty(final String s) {

@@ -16,6 +16,7 @@ package com.hughes.util.raf;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.AbstractList;
@@ -88,17 +89,25 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
     return new UniformRAFList<T>(raf, RAFList.getWrapper(serializer), startOffset);
   }
 
-  public static <T> void write(final RandomAccessFile raf,
+  static long getOffset(DataOutput out) throws IOException {
+    if (out instanceof RandomAccessFile)
+      return ((RandomAccessFile)out).getFilePointer();
+    if (out instanceof DataOutputStream)
+      return ((DataOutputStream)out).size();
+    return -1;
+  }
+
+  public static <T> void write(final DataOutput raf,
       final Collection<T> list, final RAFListSerializer<T> serializer,
       final int datumSize) throws IOException {
     raf.writeInt(list.size());
     raf.writeInt(datumSize);
     for (final T t : list) {
-      final long startOffset = raf.getFilePointer();
+      final long startOffset = getOffset(raf);
       serializer.write(raf, t);
-      if (raf.getFilePointer() != startOffset + datumSize) {
+      if (startOffset != -1 && getOffset(raf) != startOffset + datumSize) {
         throw new RuntimeException("Wrote "
-            + (raf.getFilePointer() - startOffset)
+            + (getOffset(raf) - startOffset)
             + " bytes, should have written " + datumSize);
       }
     }
