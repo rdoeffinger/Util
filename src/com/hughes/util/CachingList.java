@@ -21,12 +21,22 @@ import java.util.RandomAccess;
 public class CachingList<T> extends AbstractList<T> implements RandomAccess {
   
   private final List<T> list;
+  private final ChunkedList<T> chunked;
   private final int size;
   
   private final LRUCacheMap<Integer, T> cache;
 
   public CachingList(final List<T> list, final int cacheSize) {
     this.list = list;
+    // Use chunked interface if available and chunk size is
+    // reasonable. Limits are pure guesswork.
+    if (list instanceof ChunkedList &&
+        ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
+        ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
+        chunked = (ChunkedList<T>)list;
+    } else {
+        chunked = null;
+    }
     size = list.size();
     cache = new LRUCacheMap<Integer, T>(cacheSize);
   }
@@ -43,8 +53,17 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
   public T get(int i) {
     T t = cache.get(i);
     if (t == null) {
-      t = list.get(i);
-      cache.put(i, t);
+      if (chunked != null) {
+        int start = chunked.getChunkStart(i);
+        List<T> chunk = chunked.getChunk(start);
+        for (int idx = 0; idx < chunk.size(); ++idx) {
+            cache.put(start + idx, chunk.get(idx));
+        }
+        t = chunk.get(i - start);
+      } else {
+        t = list.get(i);
+        cache.put(i, t);
+      }
     }
     return t;
   }

@@ -24,14 +24,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.AbstractList;
 import java.util.Collection;
+import java.util.List;
 import java.util.RandomAccess;
 import java.util.zip.DeflaterOutputStream;
 
+import com.hughes.util.ChunkedList;
 import com.hughes.util.StringUtil;
 
-public class RAFList<T> extends AbstractList<T> implements RandomAccess {
+public class RAFList<T> extends AbstractList<T> implements RandomAccess, ChunkedList<T> {
 
   private static final int LONG_BYTES = Long.SIZE / 8;
   private static final int INT_BYTES = Integer.SIZE / 8;
@@ -70,17 +73,30 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess {
   }
 
   @Override
-  public T get(final int i) {
-    if (i < 0 || i >= size) {
-      throw new IndexOutOfBoundsException(i + ", size=" + size);
-    }
+  public int getMaxChunkSize() {
+    return blockSize;
+  }
+
+  @Override
+  public int getChunkStart(int index) {
+    return (index / blockSize) * blockSize;
+  }
+
+  @Override
+  public List<T> getChunk(int index) {
+    return getChunk(index, blockSize > size - index ? size - index : blockSize);
+  }
+
+  public List<T> getChunk(int i, int len) {
+    assert i == getChunkStart(i);
+    assert len <= blockSize;
+    List<T> res = new ArrayList<T>(len);
     try {
       synchronized (raf) {
         raf.seek(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
         final long start = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
         final long end = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
         raf.seek(start);
-        T res = null;
         DataInput in = raf;
         if (compress) {
             // In theory using the InflaterInputStream directly should be
@@ -92,14 +108,24 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess {
             inBytes = StringUtil.unzipFully(inBytes, -1);
             in = new DataInputStream(new ByteArrayInputStream(inBytes));
         }
-        for (int cur = (i / blockSize) * blockSize; cur <= i; ++cur) {
-            res = serializer.read(in, cur);
+        for (int cur = i; cur < i + len; ++cur) {
+            res.add(serializer.read(in, cur));
         }
         return res;
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public T get(final int i) {
+    if (i < 0 || i >= size) {
+      throw new IndexOutOfBoundsException(i + ", size=" + size);
+    }
+    int start = getChunkStart(i);
+    List<T> chunk = getChunk(start, i - start + 1);
+    return chunk.get(i - start);
   }
 
   @Override
