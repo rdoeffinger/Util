@@ -28,13 +28,8 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
   @Override
   public void write(DataOutput raf, T t) throws IOException {
-    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    final ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(t);
-    oos.close();
-    final byte[] bytes = baos.toByteArray();
-    raf.writeInt(bytes.length);
-    raf.write(bytes);
+    System.out.println("Please do not use Java serialization");
+    assert false;
   }
 
   @SuppressWarnings("unchecked")
