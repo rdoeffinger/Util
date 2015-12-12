@@ -32,32 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FileUtil {
-  
-  public static void writeObject(final Serializable o, final File file) throws FileNotFoundException, IOException {
-    final ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-    oos.writeObject(o);
-    oos.close();
-  }
-
-  public static void writeObject(final Serializable o, final String file) throws FileNotFoundException, IOException {
-    writeObject(o, new File(file));
-  }
-
-  public static Object readObject(final File file) throws IOException, ClassNotFoundException {
-    final ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
-    final Object result = ois.readObject();
-    ois.close();
-    return result;
-  }
-
-  public static Object readObject(final String file) throws IOException, ClassNotFoundException {
-    return readObject(new File(file));
-  }
-  
-  public static <T> T readObject(final File file, final Class<T> class1) throws IOException, ClassNotFoundException {
-    return class1.cast(readObject(file));
-  }
-  
   public static String readLine(final RandomAccessFile file, final long startPos) throws IOException {
     file.seek(startPos);
     return file.readLine();
