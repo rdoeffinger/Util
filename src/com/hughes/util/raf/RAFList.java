@@ -29,7 +29,13 @@ import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+
+//import org.tukaani.xz.FinishableWrapperOutputStream;
+//import org.tukaani.xz.LZMA2Options;
+//import org.tukaani.xz.XZ;
+//import org.tukaani.xz.XZOutputStream;
 
 import com.hughes.util.ChunkedList;
 import com.hughes.util.StringUtil;
@@ -50,16 +56,23 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
   public RAFList(final RandomAccessFile raf,
       final RAFListSerializer<T> serializer, final long startOffset,
-      int version, int blockSize, boolean compress)
+      int version)
       throws IOException {
     synchronized (raf) {
       this.raf = raf;
       this.serializer = serializer;
       this.version = version;
-      this.blockSize = blockSize;
-      this.compress = compress;
       raf.seek(startOffset);
-      size = raf.readInt();
+      if (version >= 7) {
+          size = StringUtil.readVarInt(raf);
+          blockSize = StringUtil.readVarInt(raf);
+          int flags = StringUtil.readVarInt(raf);
+          compress = (flags & 1) != 0;
+      } else {
+          size = raf.readInt();
+          blockSize = 1;
+          compress = false;
+      }
       this.tocOffset = raf.getFilePointer();
 
       raf.seek(tocOffset + (size + blockSize - 1) / blockSize * (version >= 7 ? INT_BYTES : LONG_BYTES));
@@ -137,14 +150,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
       final RAFListSerializer<T> serializer, final long startOffset,
       int version)
       throws IOException {
-    return new RAFList<T>(raf, serializer, startOffset, version, 1, false);
-  }
-
-  public static <T> RAFList<T> create(final RandomAccessFile raf,
-      final RAFListSerializer<T> serializer, final long startOffset,
-      int version, int blockSize, boolean compress)
-      throws IOException {
-    return new RAFList<T>(raf, serializer, startOffset, version, blockSize, compress);
+    return new RAFList<T>(raf, serializer, startOffset, version);
   }
 
   /**
@@ -154,21 +160,16 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
       final RAFSerializer<T> serializer, final long startOffset,
       int version)
       throws IOException {
-    return new RAFList<T>(raf, getWrapper(serializer), startOffset, version, 1, false);
-  }
-
-  public static <T> RAFList<T> create(final RandomAccessFile raf,
-      final RAFSerializer<T> serializer, final long startOffset,
-      int version, int blockSize, boolean compress)
-      throws IOException {
-    return new RAFList<T>(raf, getWrapper(serializer), startOffset, version, blockSize, compress);
+    return new RAFList<T>(raf, getWrapper(serializer), startOffset, version);
   }
 
   public static <T> void write(final RandomAccessFile raf,
       final Collection<T> list, final RAFListSerializer<T> serializer,
       int block_size, boolean compress)
       throws IOException {
-    raf.writeInt(list.size());
+    StringUtil.writeVarInt(raf, list.size());
+    StringUtil.writeVarInt(raf, block_size);
+    StringUtil.writeVarInt(raf, compress ? 1 : 0);
     long tocPos = raf.getFilePointer();
     long tocStart = tocPos;
     raf.seek(tocPos + INT_BYTES * ((list.size() + block_size - 1) / block_size + 1));
@@ -177,10 +178,24 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     long startOffset = raf.getFilePointer();
     DataOutputStream compress_out = null;
     ByteArrayOutputStream outstream = null;
+    int maxBlock = 0;
+    int minBlock = 0x7fffffff;
+    int sumBlock = 0;
+    int maxBlockC = 0;
+    int minBlockC = 0x7fffffff;
+    int sumBlockC = 0;
+    int numBlock = 0;
     for (final T t : list) {
       if ((i % block_size) == 0) {
           if (compress_out != null) {
               compress_out.close();
+              maxBlock = Math.max(maxBlock, compress_out.size());
+              minBlock = Math.min(minBlock, compress_out.size());
+              sumBlock += compress_out.size();
+              maxBlockC = Math.max(maxBlockC, outstream.size());
+              minBlockC = Math.min(minBlockC, outstream.size());
+              sumBlockC += outstream.size();
+              numBlock++;
               compress_out = null;
               raf.write(outstream.toByteArray());
               outstream = null;
@@ -192,12 +207,16 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
           raf.seek(startOffset);
           if (compress) {
               outstream = new ByteArrayOutputStream();
-              compress_out = new DataOutputStream(new DeflaterOutputStream(outstream));
+              //compress_out = new DataOutputStream(new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(outstream)));
+              compress_out = new DataOutputStream(new DeflaterOutputStream(outstream, new Deflater(9)));
           }
       }
       serializer.write(compress ? compress_out : raf, t);
       ++i;
     }
+    System.out.println("RAFList stats: " + numBlock + "x" + block_size + " entries");
+    System.out.println("uncompressed min " + minBlock + ", max " + maxBlock + ", sum " + sumBlock + ", average " + sumBlock / (float)numBlock);
+    System.out.println("compressed min " + minBlockC + ", max " + maxBlockC + ", sum " + sumBlockC + ", average " + sumBlockC / (float)numBlock);
     if (compress_out != null) {
         compress_out.close();
         compress_out = null;
