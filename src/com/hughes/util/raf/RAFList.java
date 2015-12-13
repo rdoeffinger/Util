@@ -177,7 +177,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     final long dataStart = raf.getFilePointer();
     long startOffset = raf.getFilePointer();
     DataOutputStream compress_out = null;
-    ByteArrayOutputStream outstream = null;
+    ByteArrayOutputStream outstream = new ByteArrayOutputStream();
     int maxBlock = 0;
     int minBlock = 0x7fffffff;
     int sumBlock = 0;
@@ -198,7 +198,11 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
               numBlock++;
               compress_out = null;
               raf.write(outstream.toByteArray());
-              outstream = null;
+              outstream.reset();
+              if ((i % 32768) == 0) {
+                  // Otherwise at least OpenJDK 8 falls completely over.
+                  System.gc();
+              }
           }
           startOffset = raf.getFilePointer();
           raf.seek(tocPos);
@@ -206,7 +210,6 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
           tocPos = raf.getFilePointer();
           raf.seek(startOffset);
           if (compress) {
-              outstream = new ByteArrayOutputStream();
               //compress_out = new DataOutputStream(new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(outstream)));
               compress_out = new DataOutputStream(new DeflaterOutputStream(outstream, new Deflater(9)));
           }
