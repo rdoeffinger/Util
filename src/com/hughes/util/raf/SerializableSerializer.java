@@ -19,12 +19,36 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 
 public class SerializableSerializer<T>  implements RAFSerializer<T> {
+
+  class ConstrainedOIS extends ObjectInputStream {
+    public ConstrainedOIS(InputStream in) throws IOException {
+      super(in);
+    }
+
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      String name = desc.getName();
+      // Note: not completely safe, LinkedHashSet is more than sufficient
+      // to allow for DoS, but better than nothing.
+      if (!name.equals(HashSet.class.getName()) &&
+          !name.equals(LinkedHashSet.class.getName()) &&
+          !name.equals(String.class.getName()))
+      {
+        throw new InvalidClassException("Not allowed to deserialize class", name);
+      }
+      return super.resolveClass(desc);
+    }
+  }
 
   @Override
   public void write(DataOutput raf, T t) throws IOException {
@@ -39,7 +63,7 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
     final byte[] bytes = new byte[length];
     raf.readFully(bytes);
     final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-    final ObjectInputStream ois = new ObjectInputStream(bais);
+    final ObjectInputStream ois = new ConstrainedOIS(bais);
     Serializable result;
     try {
       result = (Serializable) ois.readObject();
