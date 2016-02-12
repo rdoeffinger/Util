@@ -218,8 +218,10 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
       ++i;
     }
     System.out.println("RAFList stats: " + numBlock + "x" + block_size + " entries");
-    System.out.println("uncompressed min " + minBlock + ", max " + maxBlock + ", sum " + sumBlock + ", average " + sumBlock / (float)numBlock);
-    System.out.println("compressed min " + minBlockC + ", max " + maxBlockC + ", sum " + sumBlockC + ", average " + sumBlockC / (float)numBlock);
+    if (numBlock > 0) {
+        System.out.println("uncompressed min " + minBlock + ", max " + maxBlock + ", sum " + sumBlock + ", average " + sumBlock / (float)numBlock);
+        System.out.println("compressed min " + minBlockC + ", max " + maxBlockC + ", sum " + sumBlockC + ", average " + sumBlockC / (float)numBlock);
+    }
     if (compress_out != null) {
         compress_out.close();
         compress_out = null;
