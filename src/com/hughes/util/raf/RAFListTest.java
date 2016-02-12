@@ -37,7 +37,7 @@ public class RAFListTest extends TestCase {
   public void testFileList(final RAFSerializer<String> serializer) throws IOException {
     final File file = File.createTempFile("asdf", "asdf");
     file.deleteOnExit();
-    final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+    try (final RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
 
     raf.writeUTF("Hello World!");
     final List<String> l1 = Arrays.asList("1a", "1bc", "1def");
@@ -56,12 +56,13 @@ public class RAFListTest extends TestCase {
     assertEquals(l2, l2Copy);
     raf.seek(l2Copy.getEndOffset());
     assertEquals("Goodbye World!", raf.readUTF());
+    }
   }
 
   public void testEmptyList() throws IOException {
     final File file = File.createTempFile("asdf", "asdf");
     file.deleteOnExit();
-    final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+    try (final RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
 
     raf.writeUTF("Hello World!");
     final List<String> l1 = Collections.emptyList();
@@ -75,6 +76,7 @@ public class RAFListTest extends TestCase {
     assertEquals(l1, l1Copy);
     raf.seek(l1Copy.getEndOffset());
     assertEquals("Goodbye World!", raf.readUTF());
+    }
   }
 
 }
