@@ -30,10 +30,6 @@ public class RAFListTest extends TestCase {
     testFileList(RAFSerializer.STRING);
   }
 
-  public void testFileListSerializable() throws IOException {
-    testFileList(new SerializableSerializer<String>());
-  }
-
   public void testFileList(final RAFSerializer<String> serializer) throws IOException {
     final File file = File.createTempFile("asdf", "asdf");
     file.deleteOnExit();
