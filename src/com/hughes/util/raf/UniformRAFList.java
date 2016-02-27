@@ -69,7 +69,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
         return result;
       }
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Failed reading entry, dictionary corrupted?", e);
     }
   }
 

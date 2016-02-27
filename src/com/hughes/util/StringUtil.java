@@ -201,7 +201,7 @@ public final class StringUtil {
         try {
             bytes = s.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Missing UTF-8 support?!", e);
         }
         for (int i = 0; i < bytes.length; ++i) {
             if (isUnreservedUrlCharacter((char) bytes[i])) {
@@ -230,7 +230,7 @@ public final class StringUtil {
         try {
             return bytes.toString("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Missing UTF-8 support?!", e);
         }
     }
 

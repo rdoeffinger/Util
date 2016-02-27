@@ -127,7 +127,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return res;
       }
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Failed reading dictionary entries, possible data corruption?", e);
     }
   }
 

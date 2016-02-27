@@ -68,7 +68,7 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
     try {
       result = (Serializable) ois.readObject();
     } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Attempt to deserialize disallowed class", e);
     }
     ois.close();
     return (T) result;
