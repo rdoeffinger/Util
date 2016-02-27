@@ -53,11 +53,13 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
   final int version;
   final int blockSize;
   final boolean compress;
+  final String debugstr;
 
   public RAFList(final RandomAccessFile raf,
       final RAFListSerializer<T> serializer, final long startOffset,
-      int version)
+      int version, String debugstr)
       throws IOException {
+    this.debugstr = debugstr;
     synchronized (raf) {
       this.raf = raf;
       this.serializer = serializer;
@@ -127,7 +129,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return res;
       }
     } catch (IOException e) {
-      throw new RuntimeException("Failed reading dictionary entries, possible data corruption?", e);
+      throw new RuntimeException(debugstr + "Failed reading dictionary entries " + i + " - " + (i + len - 1) + ", possible data corruption?", e);
     }
   }
 
@@ -148,9 +150,9 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
   public static <T> RAFList<T> create(final RandomAccessFile raf,
       final RAFListSerializer<T> serializer, final long startOffset,
-      int version)
+      int version, String debugstr)
       throws IOException {
-    return new RAFList<T>(raf, serializer, startOffset, version);
+    return new RAFList<T>(raf, serializer, startOffset, version, debugstr);
   }
 
   /**
@@ -158,9 +160,9 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
    */
   public static <T> RAFList<T> create(final RandomAccessFile raf,
       final RAFSerializer<T> serializer, final long startOffset,
-      int version)
+      int version, String debugstr)
       throws IOException {
-    return new RAFList<T>(raf, getWrapper(serializer), startOffset, version);
+    return new RAFList<T>(raf, getWrapper(serializer), startOffset, version, debugstr);
   }
 
   public static <T> void write(final RandomAccessFile raf,
