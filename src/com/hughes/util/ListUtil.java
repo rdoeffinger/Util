@@ -33,7 +33,7 @@ public final class ListUtil {
     public static <T> T remove(final List<T> list, final int index, final T defaultValue) {
         return index < list.size() ? list.remove(index) : defaultValue;
     }
-    
+
     public static <T> T removeLast(List<T> l) {
         T last = l.get(l.size() - 1);
         l.remove(l.size() - 1);

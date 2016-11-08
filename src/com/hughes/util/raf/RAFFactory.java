@@ -18,7 +18,7 @@ import java.io.DataInput;
 import java.io.IOException;
 
 public interface RAFFactory<T> {
-  
-  T create(final DataInput raf) throws IOException;
+
+    T create(final DataInput raf) throws IOException;
 
 }

@@ -20,21 +20,21 @@ import java.io.IOException;
 
 
 public class RAFSerializableSerializer<T extends RAFSerializable<T>>  implements RAFSerializer<T> {
-  
-  final RAFFactory<T> factory;
-  
-  public RAFSerializableSerializer(final RAFFactory<T> factory) {
-    this.factory = factory;
-  }
 
-  @Override
-  public void write(DataOutput raf, T t) throws IOException {
-    t.write(raf);
-  }
+    final RAFFactory<T> factory;
 
-  @Override
-  public T read(DataInput raf) throws IOException {
-    return factory.create(raf);
-  }
+    public RAFSerializableSerializer(final RAFFactory<T> factory) {
+        this.factory = factory;
+    }
+
+    @Override
+    public void write(DataOutput raf, T t) throws IOException {
+        t.write(raf);
+    }
+
+    @Override
+    public T read(DataInput raf) throws IOException {
+        return factory.create(raf);
+    }
 
 }

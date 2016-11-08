@@ -20,28 +20,28 @@ import java.io.IOException;
 
 public interface RAFListSerializer<T> {
 
-  public void write(final DataOutput raf, final T t) throws IOException;
+    public void write(final DataOutput raf, final T t) throws IOException;
 
-  public T read(final DataInput raf, final int readIndex) throws IOException;
-    
-  static final class Wrapper<T> implements RAFListSerializer<T> {
-    
-    private final RAFSerializer<T> serializer;
+    public T read(final DataInput raf, final int readIndex) throws IOException;
 
-    public Wrapper(final RAFSerializer<T> serializer) {
-      this.serializer = serializer;
+    static final class Wrapper<T> implements RAFListSerializer<T> {
+
+        private final RAFSerializer<T> serializer;
+
+        public Wrapper(final RAFSerializer<T> serializer) {
+            this.serializer = serializer;
+        }
+
+        @Override
+        public T read(DataInput raf, int readIndex) throws IOException {
+            return serializer.read(raf);
+        }
+
+        @Override
+        public void write(DataOutput raf, T t) throws IOException {
+            serializer.write(raf, t);
+        }
+
     }
-
-    @Override
-    public T read(DataInput raf, int readIndex) throws IOException {
-      return serializer.read(raf);
-    }
-
-    @Override
-    public void write(DataOutput raf, T t) throws IOException {
-      serializer.write(raf, t);
-    }
-
-  }
 
 }

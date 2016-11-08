@@ -21,47 +21,47 @@ import java.lang.reflect.Constructor;
 
 public interface RAFSerializer<T> {
 
-  public void write(final DataOutput raf, final T t) throws IOException;
+    public void write(final DataOutput raf, final T t) throws IOException;
 
-  public T read(final DataInput raf) throws IOException;
+    public T read(final DataInput raf) throws IOException;
 
-  public static final RAFSerializer<String> STRING = new RAFSerializer<String>() {
-    @Override
-    public void write(DataOutput raf, String t) throws IOException {
-      raf.writeUTF(t);
-    }
+    public static final RAFSerializer<String> STRING = new RAFSerializer<String>() {
+        @Override
+        public void write(DataOutput raf, String t) throws IOException {
+            raf.writeUTF(t);
+        }
 
-    @Override
-    public String read(DataInput raf) throws IOException {
-      return raf.readUTF();
-    }
-  };
+        @Override
+        public String read(DataInput raf) throws IOException {
+            return raf.readUTF();
+        }
+    };
 
-  // Serializes any class with a write method and the proper constructor. 
-  public static final class RAFSerializableSerializer<T extends RAFSerializable<T>> implements RAFSerializer<T> {
-    private final Constructor<T> constructor;
-    
-    public RAFSerializableSerializer(final Class<T> clazz) {
-      try {
-        this.constructor = clazz.getConstructor(DataInput.class);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-    
-    @Override
-    public void write(DataOutput raf, T t) throws IOException {
-      t.write(raf);
-    }
+    // Serializes any class with a write method and the proper constructor.
+    public static final class RAFSerializableSerializer<T extends RAFSerializable<T>> implements RAFSerializer<T> {
+        private final Constructor<T> constructor;
 
-    @Override
-    public T read(DataInput raf) throws IOException {
-      try {
-        return constructor.newInstance(raf);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  };
+        public RAFSerializableSerializer(final Class<T> clazz) {
+            try {
+                this.constructor = clazz.getConstructor(DataInput.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void write(DataOutput raf, T t) throws IOException {
+            t.write(raf);
+        }
+
+        @Override
+        public T read(DataInput raf) throws IOException {
+            try {
+                return constructor.newInstance(raf);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
 
 }

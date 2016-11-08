@@ -70,7 +70,7 @@ public final class StringUtil {
     }
 
     public static String remove(final StringBuilder s, final Pattern start,
-            final Pattern end, final boolean includeEnd) {
+                                final Pattern end, final boolean includeEnd) {
         final Matcher startMatcher = start.matcher(s);
         if (!startMatcher.find()) {
             return null;
@@ -92,7 +92,7 @@ public final class StringUtil {
     }
 
     public static StringBuilder removeAll(final StringBuilder s, final Pattern start,
-            final Pattern end) {
+                                          final Pattern end) {
         while (remove(s, start, end, true) != null)
             ;
         return s;
@@ -107,7 +107,7 @@ public final class StringUtil {
     }
 
     public static int nestedIndexOf(final String s, final int startPos, final String open,
-            final String close) {
+                                    final String close) {
         int depth = 0;
         for (int i = startPos; i < s.length();) {
             if (s.startsWith(close, i)) {
@@ -172,7 +172,7 @@ public final class StringUtil {
     public static boolean isDigit(final char c) {
         return c >= '0' && c <= '9';
     }
-    
+
     public static boolean isDigits(String name) {
         for (int i = 0; i < name.length(); ++i) {
             if (!isDigit(name.charAt(i))) {
@@ -238,7 +238,7 @@ public final class StringUtil {
         if (v < 0 || v >= 16 * 256 * 256 * 256) {
             f.writeByte(240);
             f.writeInt(v);
-	} else if (v < 128) {
+        } else if (v < 128) {
             f.writeByte(v);
         } else if (v < 64 * 256) {
             f.writeShort(v + 128 * 256);
@@ -275,7 +275,7 @@ public final class StringUtil {
     }
 
     public static final byte[] unzipFully(final byte[] inBytes, final int size)
-            throws IOException {
+    throws IOException {
         if (size == -1) {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             final OutputStream out = new InflaterOutputStream(baos);

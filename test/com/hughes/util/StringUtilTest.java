@@ -26,25 +26,25 @@ public class StringUtilTest extends TestCase {
 
         sb = new StringBuilder("a<!--asdfasdf-->b<!---> -->c<!---->d");
         assertEquals(
-                "<!--asdfasdf-->",
-                StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                        Pattern.compile("-->", Pattern.LITERAL), true));
+            "<!--asdfasdf-->",
+            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
+                              Pattern.compile("-->", Pattern.LITERAL), true));
         assertEquals("ab<!---> -->c<!---->d", sb.toString());
 
         assertEquals(
-                "<!---> -->",
-                StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                        Pattern.compile("-->", Pattern.LITERAL), true));
+            "<!---> -->",
+            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
+                              Pattern.compile("-->", Pattern.LITERAL), true));
         assertEquals(
-                "<!---->",
-                StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                        Pattern.compile("-->", Pattern.LITERAL), true));
+            "<!---->",
+            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
+                              Pattern.compile("-->", Pattern.LITERAL), true));
 
         sb = new StringBuilder("a<!--asdfasdf-->b<!---> -->c<!---->d");
         assertEquals(
-                "abcd",
-                StringUtil.removeAll(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                        Pattern.compile("-->", Pattern.LITERAL)).toString());
+            "abcd",
+            StringUtil.removeAll(sb, Pattern.compile("<!--", Pattern.LITERAL),
+                                 Pattern.compile("-->", Pattern.LITERAL)).toString());
     }
 
     public void testZip() throws IOException {
@@ -57,27 +57,27 @@ public class StringUtilTest extends TestCase {
         String out = new String(unzipBytes);
         assertEquals(in, out);
     }
-    
+
     public void testURLs() {
         {
-        final String s = "asdf< >a%b%c<->asdf";
-        final String url = "asdf%3C+%3Ea%25b%25c%3C-%3Easdf"; 
-        assertEquals(url, StringUtil.encodeForUrl(s));
-        assertEquals(s, StringUtil.decodeFromUrl(url));
+            final String s = "asdf< >a%b%c<->asdf";
+            final String url = "asdf%3C+%3Ea%25b%25c%3C-%3Easdf";
+            assertEquals(url, StringUtil.encodeForUrl(s));
+            assertEquals(s, StringUtil.decodeFromUrl(url));
         }
 
         {
-        final String s = "röten";
-        final String url = "r%C3%B6ten"; 
-        assertEquals(url, StringUtil.encodeForUrl(s));
-        assertEquals(s, StringUtil.decodeFromUrl(url));
+            final String s = "röten";
+            final String url = "r%C3%B6ten";
+            assertEquals(url, StringUtil.encodeForUrl(s));
+            assertEquals(s, StringUtil.decodeFromUrl(url));
         }
 
         {
-        final String s = "%";
-        final String url = "%25";
-        assertEquals(url, StringUtil.encodeForUrl(s));
-        assertEquals(s, StringUtil.decodeFromUrl(url));
+            final String s = "%";
+            final String url = "%25";
+            assertEquals(url, StringUtil.encodeForUrl(s));
+            assertEquals(s, StringUtil.decodeFromUrl(url));
         }
     }
 

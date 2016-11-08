@@ -17,16 +17,16 @@ package com.hughes.util;
 import java.util.Collection;
 
 public final class CollectionUtil {
-  
-  public static final String join(final Collection<?> list, final String inbetween) {
-    final StringBuilder builder = new StringBuilder();
-    for (final Object object : list) {
-      if (builder.length() > 0) {
-        builder.append(inbetween);
-      }
-      builder.append(object.toString());
+
+    public static final String join(final Collection<?> list, final String inbetween) {
+        final StringBuilder builder = new StringBuilder();
+        for (final Object object : list) {
+            if (builder.length() > 0) {
+                builder.append(inbetween);
+            }
+            builder.append(object.toString());
+        }
+        return builder.toString();
     }
-    return builder.toString();
-  }
-   
+
 }

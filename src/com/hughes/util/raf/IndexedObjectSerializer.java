@@ -22,22 +22,22 @@ import java.util.List;
 import com.hughes.util.IndexedObject;
 
 public class IndexedObjectSerializer<T extends IndexedObject> implements RAFSerializer<T> {
-  
-  private final List<T> list;
-  
-  public IndexedObjectSerializer(final List<T> list) {
-    this.list = list;
-  }
 
-  @Override
-  public T read(DataInput raf) throws IOException {
-    final int index = raf.readInt();
-    return list.get(index);
-  }
+    private final List<T> list;
 
-  @Override
-  public void write(DataOutput raf, T t) throws IOException {
-    raf.writeInt(t.index());
-  }
+    public IndexedObjectSerializer(final List<T> list) {
+        this.list = list;
+    }
+
+    @Override
+    public T read(DataInput raf) throws IOException {
+        final int index = raf.readInt();
+        return list.get(index);
+    }
+
+    @Override
+    public void write(DataOutput raf, T t) throws IOException {
+        raf.writeInt(t.index());
+    }
 
 }

@@ -31,47 +31,46 @@ import java.util.LinkedHashSet;
 
 public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
-  class ConstrainedOIS extends ObjectInputStream {
-    public ConstrainedOIS(InputStream in) throws IOException {
-      super(in);
+    class ConstrainedOIS extends ObjectInputStream {
+        public ConstrainedOIS(InputStream in) throws IOException {
+            super(in);
+        }
+
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            String name = desc.getName();
+            // Note: not completely safe, LinkedHashSet is more than sufficient
+            // to allow for DoS, but better than nothing.
+            if (!name.equals(HashSet.class.getName()) &&
+                    !name.equals(LinkedHashSet.class.getName()) &&
+                    !name.equals(String.class.getName())) {
+                throw new InvalidClassException("Not allowed to deserialize class", name);
+            }
+            return super.resolveClass(desc);
+        }
     }
 
-    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-      String name = desc.getName();
-      // Note: not completely safe, LinkedHashSet is more than sufficient
-      // to allow for DoS, but better than nothing.
-      if (!name.equals(HashSet.class.getName()) &&
-          !name.equals(LinkedHashSet.class.getName()) &&
-          !name.equals(String.class.getName()))
-      {
-        throw new InvalidClassException("Not allowed to deserialize class", name);
-      }
-      return super.resolveClass(desc);
+    @Override
+    public void write(DataOutput raf, T t) throws IOException {
+        System.out.println("Please do not use Java serialization");
+        assert false;
     }
-  }
 
-  @Override
-  public void write(DataOutput raf, T t) throws IOException {
-    System.out.println("Please do not use Java serialization");
-    assert false;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public T read(DataInput raf) throws IOException {
-    final int length = raf.readInt();
-    final byte[] bytes = new byte[length];
-    raf.readFully(bytes);
-    final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-    final ObjectInputStream ois = new ConstrainedOIS(bais);
-    Serializable result;
-    try {
-      result = (Serializable) ois.readObject();
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Attempt to deserialize disallowed class", e);
+    @SuppressWarnings("unchecked")
+    @Override
+    public T read(DataInput raf) throws IOException {
+        final int length = raf.readInt();
+        final byte[] bytes = new byte[length];
+        raf.readFully(bytes);
+        final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        final ObjectInputStream ois = new ConstrainedOIS(bais);
+        Serializable result;
+        try {
+            result = (Serializable) ois.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Attempt to deserialize disallowed class", e);
+        }
+        ois.close();
+        return (T) result;
     }
-    ois.close();
-    return (T) result;
-  }
 
 }

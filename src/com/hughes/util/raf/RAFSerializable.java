@@ -19,6 +19,6 @@ import java.io.IOException;
 
 public interface RAFSerializable<T> {
 
-  void write(final DataOutput raf) throws IOException;
+    void write(final DataOutput raf) throws IOException;
 
 }

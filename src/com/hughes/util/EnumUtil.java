@@ -16,15 +16,15 @@ package com.hughes.util;
 
 
 public final class EnumUtil {
-  
-  public static final <T extends Enum<T>> T min(final T e1, final T e2) {
-    if (e1 == null) {
-      return e2;
+
+    public static final <T extends Enum<T>> T min(final T e1, final T e2) {
+        if (e1 == null) {
+            return e2;
+        }
+        if (e2 == null) {
+            return e1;
+        }
+        return e1.compareTo(e2) < 0 ? e1 : e2;
     }
-    if (e2 == null) {
-      return e1;
-    }
-    return e1.compareTo(e2) < 0 ? e1 : e2;
-  }
-  
+
 }

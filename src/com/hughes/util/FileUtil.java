@@ -29,47 +29,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FileUtil {
-  public static String readLine(final RandomAccessFile file, final long startPos) throws IOException {
-    file.seek(startPos);
-    return file.readLine();
-  }
-  
-  public static List<String> readLines(final File file) throws IOException {
-    final List<String> result = new ArrayList<String>();
-    final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-    try {
-        String line;
-        while ((line = in.readLine()) != null) {
-          result.add(line);
-        }
-    } finally {
-        in.close();
+    public static String readLine(final RandomAccessFile file, final long startPos) throws IOException {
+        file.seek(startPos);
+        return file.readLine();
     }
-    return result;
-  }
-  
-  public static String readToString(final File file) throws IOException {
-    final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-    StringBuilder result = new StringBuilder();
-    try {
-        String line;
-        while ((line = in.readLine()) != null) {
-          result.append(line).append("\n");
-        }
-    } finally {
-        in.close();
-    }
-    return result.toString();
-  }
-  
-  public static void writeStringToUTF8File(final String string, final File file) {
-      throw new IllegalStateException();
-  }
 
-  public static void printString(final File file, final String s) throws IOException {
-      final PrintStream out = new PrintStream(new FileOutputStream(file));
-      out.print(s);
-      out.close();
+    public static List<String> readLines(final File file) throws IOException {
+        final List<String> result = new ArrayList<String>();
+        final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+        try {
+            String line;
+            while ((line = in.readLine()) != null) {
+                result.add(line);
+            }
+        } finally {
+            in.close();
+        }
+        return result;
+    }
+
+    public static String readToString(final File file) throws IOException {
+        final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+        StringBuilder result = new StringBuilder();
+        try {
+            String line;
+            while ((line = in.readLine()) != null) {
+                result.append(line).append("\n");
+            }
+        } finally {
+            in.close();
+        }
+        return result.toString();
+    }
+
+    public static void writeStringToUTF8File(final String string, final File file) {
+        throw new IllegalStateException();
+    }
+
+    public static void printString(final File file, final String s) throws IOException {
+        final PrintStream out = new PrintStream(new FileOutputStream(file));
+        out.print(s);
+        out.close();
     }
 
 }

@@ -19,58 +19,58 @@ import java.util.List;
 import java.util.RandomAccess;
 
 public class CachingList<T> extends AbstractList<T> implements RandomAccess {
-  
-  private final List<T> list;
-  private final ChunkedList<T> chunked;
-  private final int size;
-  
-  private final LRUCacheMap<Integer, T> cache;
 
-  public CachingList(final List<T> list, final int cacheSize) {
-    this.list = list;
-    // Use chunked interface if available and chunk size is
-    // reasonable. Limits are pure guesswork.
-    if (list instanceof ChunkedList &&
-        ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
-        ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
-        chunked = (ChunkedList<T>)list;
-    } else {
-        chunked = null;
-    }
-    size = list.size();
-    cache = new LRUCacheMap<Integer, T>(cacheSize);
-  }
-  
-  public static <T> CachingList<T> create(final List<T> list, final int cacheSize) {
-    return new CachingList<T>(list, cacheSize);
-  }
+    private final List<T> list;
+    private final ChunkedList<T> chunked;
+    private final int size;
 
-  public static <T> CachingList<T> createFullyCached(final List<T> list) {
-    return new CachingList<T>(list, list.size());
-  }
+    private final LRUCacheMap<Integer, T> cache;
 
-  @Override
-  public T get(int i) {
-    T t = cache.get(i);
-    if (t == null) {
-      if (chunked != null) {
-        int start = chunked.getChunkStart(i);
-        List<T> chunk = chunked.getChunk(start);
-        for (int idx = 0; idx < chunk.size(); ++idx) {
-            cache.put(start + idx, chunk.get(idx));
+    public CachingList(final List<T> list, final int cacheSize) {
+        this.list = list;
+        // Use chunked interface if available and chunk size is
+        // reasonable. Limits are pure guesswork.
+        if (list instanceof ChunkedList &&
+                ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
+                ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
+            chunked = (ChunkedList<T>)list;
+        } else {
+            chunked = null;
         }
-        t = chunk.get(i - start);
-      } else {
-        t = list.get(i);
-        cache.put(i, t);
-      }
+        size = list.size();
+        cache = new LRUCacheMap<Integer, T>(cacheSize);
     }
-    return t;
-  }
 
-  @Override
-  public int size() {
-    return size;
-  }
+    public static <T> CachingList<T> create(final List<T> list, final int cacheSize) {
+        return new CachingList<T>(list, cacheSize);
+    }
+
+    public static <T> CachingList<T> createFullyCached(final List<T> list) {
+        return new CachingList<T>(list, list.size());
+    }
+
+    @Override
+    public T get(int i) {
+        T t = cache.get(i);
+        if (t == null) {
+            if (chunked != null) {
+                int start = chunked.getChunkStart(i);
+                List<T> chunk = chunked.getChunk(start);
+                for (int idx = 0; idx < chunk.size(); ++idx) {
+                    cache.put(start + idx, chunk.get(idx));
+                }
+                t = chunk.get(i - start);
+            } else {
+                t = list.get(i);
+                cache.put(i, t);
+            }
+        }
+        return t;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
 
 }
