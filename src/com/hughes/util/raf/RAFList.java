@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.AbstractList;
 import java.util.Collection;
@@ -45,7 +47,8 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     private static final int LONG_BYTES = Long.SIZE / 8;
     private static final int INT_BYTES = Integer.SIZE / 8;
 
-    final RandomAccessFile raf;
+    final FileChannel ch;
+    final DataInput raf;
     final RAFListSerializer<T> serializer;
     final long tocOffset;
     final int size;
@@ -55,16 +58,17 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     final boolean compress;
     final String debugstr;
 
-    public RAFList(final RandomAccessFile raf,
+    public RAFList(final FileChannel ch,
                    final RAFListSerializer<T> serializer, final long startOffset,
                    int version, String debugstr)
     throws IOException {
         this.debugstr = debugstr;
-        synchronized (raf) {
-            this.raf = raf;
+        synchronized (ch) {
+            this.ch = ch;
+            this.raf = new DataInputStream(Channels.newInputStream(this.ch));
             this.serializer = serializer;
             this.version = version;
-            raf.seek(startOffset);
+            ch.position(startOffset);
             if (version >= 7) {
                 size = StringUtil.readVarInt(raf);
                 blockSize = StringUtil.readVarInt(raf);
@@ -75,11 +79,11 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                 blockSize = 1;
                 compress = false;
             }
-            this.tocOffset = raf.getFilePointer();
+            this.tocOffset = ch.position();
 
-            raf.seek(tocOffset + (size + blockSize - 1) / blockSize * (version >= 7 ? INT_BYTES : LONG_BYTES));
+            ch.position(tocOffset + (size + blockSize - 1) / blockSize * (version >= 7 ? INT_BYTES : LONG_BYTES));
             endOffset = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
-            raf.seek(endOffset);
+            ch.position(endOffset);
         }
     }
 
@@ -108,10 +112,10 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         List<T> res = new ArrayList<T>(len);
         try {
             synchronized (raf) {
-                raf.seek(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
+                ch.position(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
                 final long start = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
                 final long end = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
-                raf.seek(start);
+                ch.position(start);
                 DataInput in = raf;
                 if (compress) {
                     // In theory using the InflaterInputStream directly should be
@@ -119,7 +123,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                     // We need the byte array as a hack to be able to signal EOF
                     // to the Inflater at the right point in time.
                     byte[] inBytes = new byte[(int)(end - start)];
-                    raf.read(inBytes);
+                    raf.readFully(inBytes);
                     inBytes = StringUtil.unzipFully(inBytes, -1);
                     in = new DataInputStream(new ByteArrayInputStream(inBytes));
                 }
@@ -148,7 +152,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return size;
     }
 
-    public static <T> RAFList<T> create(final RandomAccessFile raf,
+    public static <T> RAFList<T> create(final FileChannel raf,
                                         final RAFListSerializer<T> serializer, final long startOffset,
                                         int version, String debugstr)
     throws IOException {
@@ -158,7 +162,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     /**
      * Same, but deserialization ignores indices.
      */
-    public static <T> RAFList<T> create(final RandomAccessFile raf,
+    public static <T> RAFList<T> create(final FileChannel raf,
                                         final RAFSerializer<T> serializer, final long startOffset,
                                         int version, String debugstr)
     throws IOException {

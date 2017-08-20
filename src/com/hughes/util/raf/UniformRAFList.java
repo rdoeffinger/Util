@@ -15,36 +15,41 @@
 package com.hughes.util.raf;
 
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.RandomAccess;
 
 public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
 
-    final RandomAccessFile raf;
+    final FileChannel ch;
+    final DataInput raf;
     final RAFListSerializer<T> serializer;
     final int size;
     final int datumSize;
     final long dataStart;
     final long endOffset;
 
-    public UniformRAFList(final RandomAccessFile raf,
+    public UniformRAFList(final FileChannel ch,
                           final RAFListSerializer<T> serializer, final long startOffset)
     throws IOException {
-        synchronized (raf) {
-            this.raf = raf;
+        synchronized (ch) {
+            this.ch = ch;
+            this.raf = new DataInputStream(Channels.newInputStream(this.ch));
             this.serializer = serializer;
-            raf.seek(startOffset);
+            ch.position(startOffset);
 
             size = raf.readInt();
             datumSize = raf.readInt();
-            dataStart = raf.getFilePointer();
+            dataStart = ch.position();
             endOffset = dataStart + size * datumSize;
-            raf.seek(endOffset);
+            ch.position(endOffset);
         }
     }
 
@@ -59,11 +64,11 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
         }
         try {
             synchronized (raf) {
-                raf.seek(dataStart + i * datumSize);
+                ch.position(dataStart + i * datumSize);
                 final T result = serializer.read(raf, i);
-                if (raf.getFilePointer() != dataStart + (i + 1) * datumSize) {
+                if (ch.position() != dataStart + (i + 1) * datumSize) {
                     throw new RuntimeException("Read "
-                                               + (raf.getFilePointer() - (dataStart + i * datumSize))
+                                               + (ch.position() - (dataStart + i * datumSize))
                                                + " bytes, should have read " + datumSize);
                 }
                 return result;
@@ -78,12 +83,12 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
         return size;
     }
 
-    public static <T> UniformRAFList<T> create(final RandomAccessFile raf,
+    public static <T> UniformRAFList<T> create(final FileChannel raf,
             final RAFListSerializer<T> serializer, final long startOffset)
     throws IOException {
         return new UniformRAFList<T>(raf, serializer, startOffset);
     }
-    public static <T> UniformRAFList<T> create(final RandomAccessFile raf,
+    public static <T> UniformRAFList<T> create(final FileChannel raf,
             final RAFSerializer<T> serializer, final long startOffset)
     throws IOException {
         return new UniformRAFList<T>(raf, RAFList.getWrapper(serializer), startOffset);
