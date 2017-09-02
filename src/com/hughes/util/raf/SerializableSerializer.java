@@ -59,7 +59,7 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
     @Override
     public T read(DataInput raf) throws IOException {
         final int length = raf.readInt();
-        final byte[] bytes = new byte[length];
+        final byte[] bytes = new byte[Math.min(length, 20 * 1024 * 1024)];
         raf.readFully(bytes);
         final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         final ObjectInputStream ois = new ConstrainedOIS(bais);
