@@ -111,7 +111,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         assert len <= blockSize;
         List<T> res = new ArrayList<T>(len);
         try {
-            synchronized (raf) {
+            synchronized (ch) {
                 ch.position(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
                 final long start = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
                 final long end = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();

@@ -63,7 +63,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
             throw new IndexOutOfBoundsException("" + i);
         }
         try {
-            synchronized (raf) {
+            synchronized (ch) {
                 ch.position(dataStart + i * datumSize);
                 final T result = serializer.read(raf, i);
                 if (ch.position() != dataStart + (i + 1) * datumSize) {
