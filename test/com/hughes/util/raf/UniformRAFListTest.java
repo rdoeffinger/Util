@@ -43,10 +43,10 @@ public class UniformRAFListTest extends TestCase {
 
             raf.seek(0);
             assertEquals("Hello World!", raf.readUTF());
-            final UniformRAFList<String> l1Copy = UniformRAFList.create(raf,
+            final UniformRAFList<String> l1Copy = UniformRAFList.create(raf.getChannel(),
                                                   serializer, raf.getFilePointer());
             assertEquals(l1, l1Copy);
-            final UniformRAFList<String> l2Copy = UniformRAFList.create(raf,
+            final UniformRAFList<String> l2Copy = UniformRAFList.create(raf.getChannel(),
                                                   serializer, l1Copy.getEndOffset());
             assertEquals(l2, l2Copy);
             raf.seek(l2Copy.getEndOffset());
@@ -66,8 +66,8 @@ public class UniformRAFListTest extends TestCase {
 
             raf.seek(0);
             assertEquals("Hello World!", raf.readUTF());
-            final RAFList<String> l1Copy = RAFList.create(raf,
-                                           RAFSerializer.STRING, raf.getFilePointer(), 7);
+            final RAFList<String> l1Copy = RAFList.create(raf.getChannel(),
+                                           RAFSerializer.STRING, raf.getFilePointer(), 7, "");
             assertEquals(l1, l1Copy);
             raf.seek(l1Copy.getEndOffset());
             assertEquals("Goodbye World!", raf.readUTF());
