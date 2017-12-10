@@ -24,6 +24,7 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
     private final ChunkedList<T> chunked;
     private final int size;
 
+    private final LRUCacheMap<Integer, T> prefetchCache;
     private final LRUCacheMap<Integer, T> cache;
 
     public CachingList(final List<T> list, final int cacheSize) {
@@ -34,8 +35,11 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
                 ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
                 ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
             chunked = (ChunkedList<T>)list;
+            assert 2 * chunked.getMaxChunkSize() < cacheSize / 4;
+            prefetchCache = new LRUCacheMap<Integer, T>(cacheSize / 4);
         } else {
             chunked = null;
+            prefetchCache = null;
         }
         size = list.size();
         cache = new LRUCacheMap<Integer, T>(cacheSize);
@@ -54,16 +58,19 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
         T t = cache.get(i);
         if (t == null) {
             if (chunked != null) {
-                int start = chunked.getChunkStart(i);
-                List<T> chunk = chunked.getChunk(start);
-                for (int idx = 0; idx < chunk.size(); ++idx) {
-                    cache.put(start + idx, chunk.get(idx));
+                t = prefetchCache.get(i);
+                if (t == null) {
+                    int start = chunked.getChunkStart(i);
+                    List<T> chunk = chunked.getChunk(start);
+                    for (int idx = 0; idx < chunk.size(); ++idx) {
+                        prefetchCache.put(start + idx, chunk.get(idx));
+                    }
+                    t = chunk.get(i - start);
                 }
-                t = chunk.get(i - start);
             } else {
                 t = list.get(i);
-                cache.put(i, t);
             }
+            cache.put(i, t);
         }
         return t;
     }
