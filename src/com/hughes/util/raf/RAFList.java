@@ -50,6 +50,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     final FileChannel ch;
     final DataInput raf;
     final RAFListSerializer<T> serializer;
+    final RAFListSerializerSkippable<T> skippableSerializer;
     final long tocOffset;
     final int size;
     final long endOffset;
@@ -67,6 +68,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             this.ch = ch;
             this.raf = new DataInputStream(Channels.newInputStream(this.ch));
             this.serializer = serializer;
+            skippableSerializer = serializer instanceof RAFListSerializerSkippable ? (RAFListSerializerSkippable<T>)serializer : null;
             this.version = version;
             ch.position(startOffset);
             if (version >= 7) {
@@ -103,10 +105,10 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
     @Override
     public List<T> getChunk(int index) {
-        return getChunk(index, blockSize > size - index ? size - index : blockSize);
+        return getChunk(index, 0, blockSize > size - index ? size - index : blockSize);
     }
 
-    private List<T> getChunk(int i, int len) {
+    private List<T> getChunk(int i, int skip, int len) {
         assert i == getChunkStart(i);
         assert len <= blockSize;
         List<T> res = new ArrayList<T>(len);
@@ -127,7 +129,12 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                     inBytes = StringUtil.unzipFully(inBytes, -1);
                     in = new DataInputStream(new ByteArrayInputStream(inBytes));
                 }
-                for (int cur = i; cur < i + len; ++cur) {
+                for (int cur = i; cur < i + skip; ++cur) {
+                    assert skippableSerializer != null;
+                    if (skippableSerializer != null) skippableSerializer.skip(in, cur);
+                    else serializer.read(in, cur);
+                }
+                for (int cur = i + skip; cur < i + len; ++cur) {
                     res.add(serializer.read(in, cur));
                 }
                 return res;
@@ -143,8 +150,8 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             throw new IndexOutOfBoundsException(i + ", size=" + size);
         }
         int start = getChunkStart(i);
-        List<T> chunk = getChunk(start, i - start + 1);
-        return chunk.get(i - start);
+        List<T> chunk = getChunk(start, i - start, i - start + 1);
+        return chunk.get(0);
     }
 
     @Override

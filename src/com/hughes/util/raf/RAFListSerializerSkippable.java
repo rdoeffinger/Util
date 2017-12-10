@@ -12,26 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.hughes.util;
+package com.hughes.util.raf;
 
-import java.util.LinkedHashMap;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-public class LRUCacheMap<K,V> extends LinkedHashMap<K, V> {
-
-    private static final long serialVersionUID = 197833078417223126L;
-
-    private int maxSize;
-
-    public LRUCacheMap(final int maxSize) {
-        // we do not want re-hashing, so manually apply a
-        // load factor and set the load factor argument to a high value
-        super(maxSize*3/2, 1.0f, true);
-        this.maxSize = maxSize;
-    }
-
-    @Override
-    protected boolean removeEldestEntry(java.util.Map.Entry<K, V> eldest) {
-        return this.size() > maxSize;
-    }
-
+public interface RAFListSerializerSkippable<T> extends RAFListSerializer<T> {
+    public void skip(final DataInput raf, final int readIndex) throws IOException;
 }

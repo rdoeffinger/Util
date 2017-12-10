@@ -27,11 +27,11 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
     private final LRUCacheMap<Integer, T> prefetchCache;
     private final LRUCacheMap<Integer, T> cache;
 
-    public CachingList(final List<T> list, final int cacheSize) {
+    public CachingList(final List<T> list, final int cacheSize, boolean useChunked) {
         this.list = list;
         // Use chunked interface if available and chunk size is
         // reasonable. Limits are pure guesswork.
-        if (list instanceof ChunkedList &&
+        if (useChunked &&
                 ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
                 ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
             chunked = (ChunkedList<T>)list;
@@ -45,12 +45,16 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
         cache = new LRUCacheMap<Integer, T>(cacheSize);
     }
 
+    public static <T> CachingList<T> create(final List<T> list, final int cacheSize, boolean useChunked) {
+        return new CachingList<T>(list, cacheSize, useChunked);
+    }
+
     public static <T> CachingList<T> create(final List<T> list, final int cacheSize) {
-        return new CachingList<T>(list, cacheSize);
+        return new CachingList<T>(list, cacheSize, list instanceof ChunkedList);
     }
 
     public static <T> CachingList<T> createFullyCached(final List<T> list) {
-        return new CachingList<T>(list, list.size());
+        return new CachingList<T>(list, list.size(), true);
     }
 
     @Override
