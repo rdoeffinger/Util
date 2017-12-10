@@ -106,7 +106,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return getChunk(index, blockSize > size - index ? size - index : blockSize);
     }
 
-    public List<T> getChunk(int i, int len) {
+    private List<T> getChunk(int i, int len) {
         assert i == getChunkStart(i);
         assert len <= blockSize;
         List<T> res = new ArrayList<T>(len);
