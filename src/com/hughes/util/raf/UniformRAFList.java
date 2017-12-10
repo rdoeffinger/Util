@@ -14,6 +14,8 @@
 
 package com.hughes.util.raf;
 
+import com.hughes.util.ChunkedList;
+
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -23,11 +25,14 @@ import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.RandomAccess;
 
-public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
+public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, ChunkedList<T> {
 
+    static final int blockSize = 32;
     final FileChannel ch;
     final DataInput raf;
     final RAFListSerializer<T> serializer;
@@ -81,6 +86,38 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess {
     @Override
     public int size() {
         return size;
+    }
+
+    @Override
+    public int getMaxChunkSize() {
+        return blockSize;
+    }
+
+    @Override
+    public int getChunkStart(int index) {
+        return (index / blockSize) * blockSize;
+    }
+
+    @Override
+    public List<T> getChunk(int i) {
+        int len = blockSize > size - i ? size - i : blockSize;
+        List<T> res = new ArrayList<T>(len);
+        try {
+            synchronized (ch) {
+                ch.position(dataStart + i * datumSize);
+                for (int cur = i; cur < i + len; ++cur) {
+                    res.add(serializer.read(raf, cur));
+                }
+                if (ch.position() != dataStart + (i + len) * datumSize) {
+                    throw new RuntimeException("Read "
+                                               + (ch.position() - (dataStart + i * datumSize))
+                                               + " bytes, should have read " + len * datumSize);
+                }
+                return res;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed reading entry, dictionary corrupted?", e);
+        }
     }
 
     public static <T> UniformRAFList<T> create(final FileChannel raf,
