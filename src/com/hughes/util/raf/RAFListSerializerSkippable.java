@@ -19,5 +19,5 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 public interface RAFListSerializerSkippable<T> extends RAFListSerializer<T> {
-    public void skip(final DataInput raf, final int readIndex) throws IOException;
+    void skip(final DataInput raf, final int readIndex) throws IOException;
 }

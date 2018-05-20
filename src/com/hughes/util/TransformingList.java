@@ -20,8 +20,8 @@ import java.util.RandomAccess;
 
 public class TransformingList<T1,T2> extends AbstractList<T2> implements RandomAccess {
 
-    public static interface Transformer<T1,T2> {
-        public T2 transform(T1 t1);
+    public interface Transformer<T1,T2> {
+        T2 transform(T1 t1);
     }
 
     private final List<T1> list;

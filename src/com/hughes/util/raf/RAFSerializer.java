@@ -21,11 +21,11 @@ import java.lang.reflect.Constructor;
 
 public interface RAFSerializer<T> {
 
-    public void write(final DataOutput raf, final T t) throws IOException;
+    void write(final DataOutput raf, final T t) throws IOException;
 
-    public T read(final DataInput raf) throws IOException;
+    T read(final DataInput raf) throws IOException;
 
-    public static final RAFSerializer<String> STRING = new RAFSerializer<String>() {
+    RAFSerializer<String> STRING = new RAFSerializer<String>() {
         @Override
         public void write(DataOutput raf, String t) throws IOException {
             raf.writeUTF(t);
@@ -38,7 +38,7 @@ public interface RAFSerializer<T> {
     };
 
     // Serializes any class with a write method and the proper constructor.
-    public static final class RAFSerializableSerializer<T extends RAFSerializable<T>> implements RAFSerializer<T> {
+    final class RAFSerializableSerializer<T extends RAFSerializable<T>> implements RAFSerializer<T> {
         private final Constructor<T> constructor;
 
         public RAFSerializableSerializer(final Class<T> clazz) {
@@ -55,13 +55,13 @@ public interface RAFSerializer<T> {
         }
 
         @Override
-        public T read(DataInput raf) throws IOException {
+        public T read(DataInput raf) {
             try {
                 return constructor.newInstance(raf);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
-    };
+    }
 
 }
