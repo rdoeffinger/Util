@@ -16,9 +16,11 @@ package com.hughes.util;
 
 import java.util.Collection;
 
+@SuppressWarnings("WeakerAccess")
 public final class CollectionUtil {
 
-    public static final String join(final Collection<?> list, final String inbetween) {
+    @SuppressWarnings("unused")
+    public static String join(final Collection<?> list, final String inbetween) {
         final StringBuilder builder = new StringBuilder();
         for (final Object object : list) {
             if (builder.length() > 0) {

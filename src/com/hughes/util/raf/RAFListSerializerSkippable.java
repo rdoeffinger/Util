@@ -15,7 +15,6 @@
 package com.hughes.util.raf;
 
 import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 public interface RAFListSerializerSkippable<T> extends RAFListSerializer<T> {

@@ -21,40 +21,36 @@ import java.util.RandomAccess;
 public class CachingList<T> extends AbstractList<T> implements RandomAccess {
 
     private final List<T> list;
-    private final ChunkedList<T> chunked;
+    private ChunkedList<T> chunked;
     private final int size;
 
     private final LRUCacheMap<Integer, T> prefetchCache;
     private final LRUCacheMap<Integer, T> cache;
 
-    public CachingList(final List<T> list, final int cacheSize, boolean useChunked) {
+    private CachingList(final List<T> list, final int cacheSize, boolean useChunked) {
         this.list = list;
+        chunked = useChunked ? (ChunkedList<T>)list : null;
         // Use chunked interface if available and chunk size is
         // reasonable. Limits are pure guesswork.
-        if (useChunked &&
-                ((ChunkedList<T>)list).getMaxChunkSize() > 1 &&
-                ((ChunkedList<T>)list).getMaxChunkSize() < cacheSize / 16) {
-            chunked = (ChunkedList<T>)list;
+        if (chunked != null &&
+                chunked.getMaxChunkSize() > 1 &&
+                chunked.getMaxChunkSize() < cacheSize / 16) {
             assert 2 * chunked.getMaxChunkSize() < cacheSize / 4;
-            prefetchCache = new LRUCacheMap<Integer, T>(cacheSize / 4);
+            prefetchCache = new LRUCacheMap<>(cacheSize / 4);
         } else {
             chunked = null;
             prefetchCache = null;
         }
         size = list.size();
-        cache = new LRUCacheMap<Integer, T>(cacheSize);
+        cache = new LRUCacheMap<>(cacheSize);
     }
 
     public static <T> CachingList<T> create(final List<T> list, final int cacheSize, boolean useChunked) {
-        return new CachingList<T>(list, cacheSize, useChunked);
-    }
-
-    public static <T> CachingList<T> create(final List<T> list, final int cacheSize) {
-        return new CachingList<T>(list, cacheSize, list instanceof ChunkedList);
+        return new CachingList<>(list, cacheSize, useChunked);
     }
 
     public static <T> CachingList<T> createFullyCached(final List<T> list) {
-        return new CachingList<T>(list, list.size(), true);
+        return new CachingList<>(list, list.size(), true);
     }
 
     @Override

@@ -32,17 +32,17 @@ import java.util.RandomAccess;
 
 public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, ChunkedList<T> {
 
-    static final int blockSize = 32;
-    final FileChannel ch;
-    final DataInput raf;
-    final RAFListSerializer<T> serializer;
-    final int size;
-    final int datumSize;
-    final long dataStart;
-    final long endOffset;
+    private static final int blockSize = 32;
+    private final FileChannel ch;
+    private final DataInput raf;
+    private final RAFListSerializer<T> serializer;
+    private final int size;
+    private final int datumSize;
+    private final long dataStart;
+    private final long endOffset;
 
-    public UniformRAFList(final FileChannel ch,
-                          final RAFListSerializer<T> serializer, final long startOffset)
+    private UniformRAFList(final FileChannel ch,
+                           final RAFListSerializer<T> serializer, final long startOffset)
     throws IOException {
         synchronized (ch) {
             this.ch = ch;
@@ -101,7 +101,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     @Override
     public List<T> getChunk(int i) {
         int len = blockSize > size - i ? size - i : blockSize;
-        List<T> res = new ArrayList<T>(len);
+        List<T> res = new ArrayList<>(len);
         try {
             synchronized (ch) {
                 ch.position(dataStart + i * datumSize);
@@ -123,15 +123,15 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     public static <T> UniformRAFList<T> create(final FileChannel raf,
             final RAFListSerializer<T> serializer, final long startOffset)
     throws IOException {
-        return new UniformRAFList<T>(raf, serializer, startOffset);
+        return new UniformRAFList<>(raf, serializer, startOffset);
     }
     public static <T> UniformRAFList<T> create(final FileChannel raf,
             final RAFSerializer<T> serializer, final long startOffset)
     throws IOException {
-        return new UniformRAFList<T>(raf, RAFList.getWrapper(serializer), startOffset);
+        return new UniformRAFList<>(raf, RAFList.getWrapper(serializer), startOffset);
     }
 
-    static long getOffset(DataOutput out) throws IOException {
+    private static long getOffset(DataOutput out) throws IOException {
         if (out instanceof RandomAccessFile)
             return ((RandomAccessFile)out).getFilePointer();
         if (out instanceof DataOutputStream)

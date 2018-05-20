@@ -15,14 +15,12 @@
 package com.hughes.util.raf;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -32,7 +30,7 @@ import java.util.LinkedHashSet;
 public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
     class ConstrainedOIS extends ObjectInputStream {
-        public ConstrainedOIS(InputStream in) throws IOException {
+        ConstrainedOIS(InputStream in) throws IOException {
             super(in);
         }
 
@@ -50,7 +48,7 @@ public class SerializableSerializer<T>  implements RAFSerializer<T> {
     }
 
     @Override
-    public void write(DataOutput raf, T t) throws IOException {
+    public void write(DataOutput raf, T t) {
         System.out.println("Please do not use Java serialization");
         assert false;
     }

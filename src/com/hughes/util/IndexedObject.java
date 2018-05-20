@@ -21,6 +21,7 @@ public class IndexedObject {
 
     protected int index;
 
+    @SuppressWarnings("WeakerAccess")
     public IndexedObject(final int index) {
         this.index = index;
     }

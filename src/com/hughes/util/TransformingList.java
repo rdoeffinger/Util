@@ -27,13 +27,14 @@ public class TransformingList<T1,T2> extends AbstractList<T2> implements RandomA
     private final List<T1> list;
     private final Transformer<T1,T2> transformer;
 
+    @SuppressWarnings("WeakerAccess")
     public TransformingList(final List<T1> list, final Transformer<T1, T2> transformer) {
         this.list = list;
         this.transformer = transformer;
     }
 
     public static <T1,T2> TransformingList<T1,T2> create(final List<T1> list, final Transformer<T1, T2> transformer) {
-        return new TransformingList<T1,T2>(list, transformer);
+        return new TransformingList<>(list, transformer);
     }
 
     @Override

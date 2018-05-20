@@ -20,7 +20,7 @@ public class LRUCacheMap<K,V> extends LinkedHashMap<K, V> {
 
     private static final long serialVersionUID = 197833078417223126L;
 
-    private int maxSize;
+    private final int maxSize;
 
     public LRUCacheMap(final int maxSize) {
         // we do not want re-hashing, so manually apply a
