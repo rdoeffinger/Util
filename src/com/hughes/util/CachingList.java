@@ -27,6 +27,7 @@ public class CachingList<T> extends AbstractList<T> implements RandomAccess {
     private final LRUCacheMap<Integer, T> prefetchCache;
     private final LRUCacheMap<Integer, T> cache;
 
+    @SuppressWarnings("unchecked")
     private CachingList(final List<T> list, final int cacheSize, boolean useChunked) {
         this.list = list;
         chunked = useChunked ? (ChunkedList<T>)list : null;
