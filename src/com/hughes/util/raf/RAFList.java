@@ -102,7 +102,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
     @Override
     public List<T> getChunk(int index) {
-        return getChunk(index, 0, blockSize > size - index ? size - index : blockSize);
+        return getChunk(index, 0, Math.min(blockSize, size - index));
     }
 
     private List<T> getChunk(int i, int skip, int len) {

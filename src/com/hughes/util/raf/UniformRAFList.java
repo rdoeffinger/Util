@@ -100,7 +100,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
 
     @Override
     public List<T> getChunk(int i) {
-        int len = blockSize > size - i ? size - i : blockSize;
+        int len = Math.min(blockSize, size - i);
         List<T> res = new ArrayList<>(len);
         try {
             synchronized (ch) {

@@ -29,7 +29,7 @@ import java.util.LinkedHashSet;
 
 public class SerializableSerializer<T>  implements RAFSerializer<T> {
 
-    class ConstrainedOIS extends ObjectInputStream {
+    static class ConstrainedOIS extends ObjectInputStream {
         ConstrainedOIS(InputStream in) throws IOException {
             super(in);
         }
