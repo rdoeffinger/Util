@@ -56,6 +56,10 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     private final boolean compress;
     private final String debugstr;
 
+    // buffer to avoid decompressing the same data over and over
+    private int chunkDecBufIdx = -1;
+    private byte[] chunkDecBuf;
+
     private RAFList(final FileChannel ch,
                     final RAFListSerializer<T> serializer, final long startOffset,
                     int version, String debugstr)
@@ -121,9 +125,16 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                     // possible, decompressing all at once should be better.
                     // We need the byte array as a hack to be able to signal EOF
                     // to the Inflater at the right point in time.
-                    byte[] inBytes = new byte[Math.min((int)(end - start), 20 * 1024 * 1024)];
-                    raf.readFully(inBytes);
-                    inBytes = StringUtil.unzipFully(inBytes, -1);
+                    byte[] inBytes;
+                    if (chunkDecBufIdx == i) inBytes = chunkDecBuf;
+                    else {
+                        chunkDecBufIdx = i;
+                        chunkDecBuf = null;
+                        inBytes = new byte[Math.min((int)(end - start), 20 * 1024 * 1024)];
+                        raf.readFully(inBytes);
+                        inBytes = StringUtil.unzipFully(inBytes, -1);
+                        chunkDecBuf = inBytes;
+                    }
                     in = new DataInputStream(new ByteArrayInputStream(inBytes));
                 }
                 for (int cur = i; cur < i + skip; ++cur) {
