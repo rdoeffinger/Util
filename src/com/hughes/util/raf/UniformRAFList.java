@@ -14,8 +14,6 @@
 
 package com.hughes.util.raf;
 
-import com.hughes.util.ChunkedList;
-
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -29,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
+
+import com.hughes.util.ChunkedList;
 
 public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, ChunkedList<T> {
 
