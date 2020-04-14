@@ -20,6 +20,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.AbstractList;
@@ -29,33 +30,27 @@ import java.util.List;
 import java.util.RandomAccess;
 
 import com.hughes.util.ChunkedList;
+import com.hughes.util.DataInputBuffer;
 
 public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, ChunkedList<T> {
 
     private static final int blockSize = 32;
-    private final FileChannel ch;
-    private final DataInput raf;
+    private final DataInputBuffer dataInput;
     private final RAFListSerializer<T> serializer;
     private final int size;
     private final int datumSize;
-    private final long dataStart;
+    private final int dataSize;
     private final long endOffset;
 
-    private UniformRAFList(final FileChannel ch,
-                           final RAFListSerializer<T> serializer, final long startOffset)
+    private UniformRAFList(final DataInputBuffer in,
+                           final RAFListSerializer<T> serializer)
     throws IOException {
-        synchronized (ch) {
-            this.ch = ch;
-            this.raf = new DataInputStream(Channels.newInputStream(this.ch));
-            this.serializer = serializer;
-            ch.position(startOffset);
-
-            size = raf.readInt();
-            datumSize = raf.readInt();
-            dataStart = ch.position();
-            endOffset = dataStart + size * datumSize;
-            ch.position(endOffset);
-        }
+        this.serializer = serializer;
+        size = in.readInt();
+        datumSize = in.readInt();
+        dataSize = size * datumSize;
+        endOffset = in.getFilePosition() + dataSize;
+        dataInput = in.slice(dataSize);
     }
 
     public long getEndOffset() {
@@ -67,20 +62,19 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
         if (i < 0 || i >= size) {
             throw new IndexOutOfBoundsException("" + i);
         }
+        dataInput.position(i * datumSize);
+        final T result;
         try {
-            synchronized (ch) {
-                ch.position(dataStart + i * datumSize);
-                final T result = serializer.read(raf, i);
-                if (ch.position() != dataStart + (i + 1) * datumSize) {
-                    throw new RuntimeException("Read "
-                                               + (ch.position() - (dataStart + i * datumSize))
-                                               + " bytes, should have read " + datumSize);
-                }
-                return result;
-            }
+            result = serializer.read(dataInput, i);
         } catch (IOException e) {
             throw new RuntimeException("Failed reading entry, dictionary corrupted?", e);
         }
+        if (dataInput.position() != (i + 1) * datumSize) {
+            throw new RuntimeException("Read "
+                                       + (dataInput.position() - i * datumSize)
+                                       + " bytes, should have read " + datumSize);
+        }
+        return result;
     }
 
     @Override
@@ -102,33 +96,31 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     public List<T> getChunk(int i) {
         int len = Math.min(blockSize, size - i);
         List<T> res = new ArrayList<>(len);
+        dataInput.position(i * datumSize);
         try {
-            synchronized (ch) {
-                ch.position(dataStart + i * datumSize);
-                for (int cur = i; cur < i + len; ++cur) {
-                    res.add(serializer.read(raf, cur));
-                }
-                if (ch.position() != dataStart + (i + len) * datumSize) {
-                    throw new RuntimeException("Read "
-                                               + (ch.position() - (dataStart + i * datumSize))
-                                               + " bytes, should have read " + len * datumSize);
-                }
-                return res;
+            for (int cur = i; cur < i + len; ++cur) {
+                res.add(serializer.read(dataInput, cur));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed reading entry, dictionary corrupted?", e);
         }
+        if (dataInput.position() != (i + len) * datumSize) {
+            throw new RuntimeException("Read "
+                                      + (dataInput.position() - i * datumSize)
+                                      + " bytes, should have read " + len * datumSize);
+        }
+        return res;
     }
 
-    public static <T> UniformRAFList<T> create(final FileChannel raf,
-            final RAFListSerializer<T> serializer, final long startOffset)
+    public static <T> UniformRAFList<T> create(final DataInputBuffer in,
+            final RAFListSerializer<T> serializer)
     throws IOException {
-        return new UniformRAFList<>(raf, serializer, startOffset);
+        return new UniformRAFList<>(in, serializer);
     }
-    public static <T> UniformRAFList<T> create(final FileChannel raf,
-            final RAFSerializer<T> serializer, final long startOffset)
+    public static <T> UniformRAFList<T> create(final DataInputBuffer in,
+            final RAFSerializer<T> serializer)
     throws IOException {
-        return new UniformRAFList<>(raf, RAFList.getWrapper(serializer), startOffset);
+        return new UniformRAFList<>(in, RAFList.getWrapper(serializer));
     }
 
     private static long getOffset(DataOutput out) throws IOException {
