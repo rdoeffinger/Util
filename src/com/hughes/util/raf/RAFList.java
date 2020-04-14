@@ -115,28 +115,25 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         List<T> res = new ArrayList<>(len);
         try {
             synchronized (ch) {
-                ch.position(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
-                final long start = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
-                final long end = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
-                ch.position(start);
-                DataInput in = raf;
-                if (compress) {
-                    // In theory using the InflaterInputStream directly should be
-                    // possible, decompressing all at once should be better.
-                    // We need the byte array as a hack to be able to signal EOF
-                    // to the Inflater at the right point in time.
-                    byte[] inBytes;
-                    if (chunkDecBufIdx == i) inBytes = chunkDecBuf;
-                    else {
-                        chunkDecBufIdx = i;
+                if (chunkDecBufIdx != i) {
+                    ch.position(tocOffset + (i / blockSize) * (version >= 7 ? INT_BYTES : LONG_BYTES));
+                    final long start = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
+                    final long end = version >= 7 ? tocOffset + raf.readInt() : raf.readLong();
+                    ch.position(start);
+                    if (compress) {
+                        // In theory using the InflaterInputStream directly should be
+                        // possible, decompressing all at once should be better.
+                        // We need the byte array as a hack to be able to signal EOF
+                        // to the Inflater at the right point in time.
                         chunkDecBuf = null;
-                        inBytes = new byte[Math.min((int)(end - start), 20 * 1024 * 1024)];
+                        byte[] inBytes = new byte[Math.min((int)(end - start), 20 * 1024 * 1024)];
                         raf.readFully(inBytes);
                         inBytes = StringUtil.unzipFully(inBytes, -1);
+                        chunkDecBufIdx = i;
                         chunkDecBuf = inBytes;
                     }
-                    in = new DataInputStream(new ByteArrayInputStream(inBytes));
                 }
+                DataInput in = compress ? new DataInputStream(new ByteArrayInputStream(chunkDecBuf)) : raf;
                 for (int cur = i; cur < i + skip; ++cur) {
                     assert skippableSerializer != null;
                     if (skippableSerializer != null) skippableSerializer.skip(in, cur);
