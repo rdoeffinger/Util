@@ -26,7 +26,7 @@ public final class CollectionUtil {
             if (builder.length() > 0) {
                 builder.append(inbetween);
             }
-            builder.append(object.toString());
+            builder.append(object);
         }
         return builder.toString();
     }

@@ -15,14 +15,10 @@
 package com.hughes.util.raf;
 
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,16 +35,14 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     private final RAFListSerializer<T> serializer;
     private final int size;
     private final int datumSize;
-    private final int dataSize;
     private final long endOffset;
 
     private UniformRAFList(final DataInputBuffer in,
-                           final RAFListSerializer<T> serializer)
-    throws IOException {
+                           final RAFListSerializer<T> serializer) {
         this.serializer = serializer;
         size = in.readInt();
         datumSize = in.readInt();
-        dataSize = size * datumSize;
+        int dataSize = size * datumSize;
         endOffset = in.getFilePosition() + dataSize;
         dataInput = in.slice(dataSize);
     }
@@ -152,8 +146,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
                                  final int datumSize) throws IOException {
         write(raf, list, new RAFListSerializer<T>() {
             @Override
-            public T read(DataInput raf, final int readIndex)
-            throws IOException {
+            public T read(DataInput raf, final int readIndex) throws IOException {
                 return serializer.read(raf);
             }
             @Override
