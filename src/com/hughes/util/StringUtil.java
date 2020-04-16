@@ -53,11 +53,13 @@ public final class StringUtil {
         return result.toString();
     }
 
-    private static final Pattern ALL_ASCII = Pattern.compile("[\\p{ASCII}]*");
-
     @SuppressWarnings("unused")
     public static boolean isAscii(final String s) {
-        return ALL_ASCII.matcher(s).matches();
+        for (int i = 0; i < s.length(); i++) {
+            int c = s.charAt(i);
+            if (c < 0 || c > 127) return false;
+        }
+        return true;
     }
 
     private static boolean isLatinLetter(final char c) {
