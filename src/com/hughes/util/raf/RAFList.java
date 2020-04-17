@@ -14,17 +14,16 @@
 
 package com.hughes.util.raf;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
@@ -174,20 +173,72 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return new RAFList<>(in, getWrapper(serializer), version, debugstr);
     }
 
+    private static class BlockCompressor<T> implements Runnable {
+        public BlockCompressor(final List<T> list,
+                               final RAFListSerializer<T> serializer,
+                               int blockStart, int blockEnd) {
+            this.list = list;
+            this.serializer = serializer;
+            this.blockStart = blockStart;
+            this.blockEnd = blockEnd;
+            sem = new Semaphore(0);
+        }
+
+        private final List<T> list;
+        private final RAFListSerializer<T> serializer;
+        private final int blockStart;
+        private final int blockEnd;
+        public Semaphore sem;
+        public byte[] data;
+        public int uncompSize;
+
+        @Override
+        public void run() {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            //OutputStream stream = new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(baos));
+            OutputStream stream = new DeflaterOutputStream(baos, new Deflater(9));
+            DataOutputStream outstream = new DataOutputStream(new BufferedOutputStream(stream));
+            try {
+                for (int i = blockStart; i < blockEnd; i++) {
+                    serializer.write(outstream, list.get(i));
+                }
+                outstream.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            data = baos.toByteArray();
+            uncompSize = outstream.size();
+            sem.release();
+        }
+    }
+
     public static <T> void write(final RandomAccessFile raf,
-                                 final Collection<T> list, final RAFListSerializer<T> serializer,
+                                 final List<T> list, final RAFListSerializer<T> serializer,
                                  int block_size, boolean compress)
     throws IOException {
         StringUtil.writeVarInt(raf, list.size());
         StringUtil.writeVarInt(raf, block_size);
         StringUtil.writeVarInt(raf, compress ? 1 : 0);
-        long tocPos = raf.getFilePointer();
-        long tocStart = tocPos;
-        raf.seek(tocPos + INT_BYTES * ((list.size() + block_size - 1) / block_size + 1));
-        int i = 0;
+        long tocStart = raf.getFilePointer();
+        int blockCnt = (list.size() + block_size - 1) / block_size;
+        int tocSize = INT_BYTES * (blockCnt + 1);
+        ByteBuffer tocData = ByteBuffer.allocate(tocSize);
+        raf.seek(tocStart + tocSize);
         final long dataStart = raf.getFilePointer();
-        DataOutputStream compress_out = null;
-        ByteArrayOutputStream outstream = new ByteArrayOutputStream();
+
+        final ArrayList<BlockCompressor<T>> blocks = new ArrayList<>(blockCnt);
+        if (compress) {
+            ExecutorService e = Executors.newCachedThreadPool();
+            for (int i = 0; i < blockCnt; i++) {
+                int start = i * block_size;
+                int end = Math.min(start + block_size, list.size());
+                BlockCompressor<T> bb = new BlockCompressor<>(list, serializer, start, end);
+                e.execute(bb);
+                blocks.add(bb);
+            }
+            e.shutdown();
+        }
+
         int maxBlock = 0;
         int minBlock = 0x7fffffff;
         int sumBlock = 0;
@@ -195,70 +246,59 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         int minBlockC = 0x7fffffff;
         int sumBlockC = 0;
         int numBlock = 0;
-        for (final T t : list) {
-            if ((i % block_size) == 0) {
-                if (compress_out != null) {
-                    compress_out.close();
-                    maxBlock = Math.max(maxBlock, compress_out.size());
-                    minBlock = Math.min(minBlock, compress_out.size());
-                    sumBlock += compress_out.size();
-                    maxBlockC = Math.max(maxBlockC, outstream.size());
-                    minBlockC = Math.min(minBlockC, outstream.size());
-                    sumBlockC += outstream.size();
-                    numBlock++;
-                    compress_out = null;
-                    raf.write(outstream.toByteArray());
-                    outstream.reset();
-                    if ((i % 32768) == 0) {
-                        // Otherwise at least OpenJDK 8 falls completely over.
-                        System.gc();
-                    }
+        for (int i = 0; i < blockCnt; i++) {
+            long startOffset = raf.getFilePointer();
+            tocData.putInt((int)(startOffset - tocStart));
+            if (compress) {
+                BlockCompressor<T> b = blocks.get(i);
+                try {
+                    b.sem.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                long startOffset = raf.getFilePointer();
-                raf.seek(tocPos);
-                raf.writeInt((int)(startOffset - tocStart));
-                tocPos = raf.getFilePointer();
-                raf.seek(startOffset);
-                if (compress) {
-                    //compress_out = new DataOutputStream(new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(outstream)));
-                    compress_out = new DataOutputStream(new DeflaterOutputStream(outstream, new Deflater(9)));
+                maxBlock = Math.max(maxBlock, b.uncompSize);
+                minBlock = Math.min(minBlock, b.uncompSize);
+                sumBlock += b.uncompSize;
+                maxBlockC = Math.max(maxBlockC, b.data.length);
+                minBlockC = Math.min(minBlockC, b.data.length);
+                sumBlockC += b.data.length;
+                numBlock++;
+                raf.write(b.data);
+            } else {
+                int start = i * block_size;
+                int end = Math.min(start + block_size, list.size());
+                for (int j = start; j < end; j++) {
+                    serializer.write(raf, list.get(j));
                 }
             }
-            serializer.write(compress ? compress_out : raf, t);
-            ++i;
         }
         System.out.println("RAFList stats: " + numBlock + "x" + block_size + " entries");
         if (numBlock > 0) {
             System.out.println("uncompressed min " + minBlock + ", max " + maxBlock + ", sum " + sumBlock + ", average " + sumBlock / (float)numBlock);
             System.out.println("compressed min " + minBlockC + ", max " + maxBlockC + ", sum " + sumBlockC + ", average " + sumBlockC / (float)numBlock);
         }
-        if (compress_out != null) {
-            compress_out.close();
-            compress_out = null;
-            raf.write(outstream.toByteArray());
-            outstream = null;
-        }
         final long endOffset = raf.getFilePointer();
-        raf.seek(tocPos);
-        raf.writeInt((int)(endOffset - tocStart));
+        tocData.putInt((int)(endOffset - tocStart));
+        raf.seek(tocStart);
+        raf.write(tocData.array());
         assert dataStart == raf.getFilePointer();
         raf.seek(endOffset);
     }
 
     public static <T> void write(final RandomAccessFile raf,
-                                 final Collection<T> list, final RAFListSerializer<T> serializer)
+                                 final List<T> list, final RAFListSerializer<T> serializer)
     throws IOException {
         write(raf, list, serializer, 1, false);
     }
     public static <T> void write(final RandomAccessFile raf,
-                                 final Collection<T> list, final RAFSerializer<T> serializer,
+                                 final List<T> list, final RAFSerializer<T> serializer,
                                  int block_size, boolean compress)
     throws IOException {
         write(raf, list, getWrapper(serializer), block_size, compress);
     }
 
     public static <T> void write(final RandomAccessFile raf,
-                                 final Collection<T> list, final RAFSerializer<T> serializer)
+                                 final List<T> list, final RAFSerializer<T> serializer)
     throws IOException {
         write(raf, list, getWrapper(serializer), 1, false);
     }
