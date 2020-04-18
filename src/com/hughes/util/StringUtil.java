@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -81,7 +80,12 @@ public final class StringUtil {
     public static String encodeForUrl(final String s) {
         final StringBuilder result = new StringBuilder();
         byte[] bytes;
-        bytes = s.getBytes(StandardCharsets.UTF_8);
+        try {
+            // Cannot use StandardCharsets due to older Android.
+            bytes = s.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Missing UTF-8 support?!", e);
+        }
         for (byte aByte : bytes) {
             if (isUnreservedUrlCharacter((char) aByte)) {
                 result.append((char) aByte);
