@@ -99,7 +99,7 @@ public final class DataInputBuffer implements DataInput {
 
     public String asString() {
         try {
-            return new String(b.array(), "UTF-8");
+            return new String(b.array(), b.arrayOffset(), b.limit(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("Missing UTF-8 support?!", e);
         }
