@@ -17,7 +17,6 @@ package com.hughes.util;
 import java.io.DataInput;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 public final class DataInputBuffer implements DataInput {
     public final ByteBuffer b;

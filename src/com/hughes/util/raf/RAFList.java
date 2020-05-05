@@ -18,7 +18,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
