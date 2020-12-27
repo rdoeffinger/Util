@@ -176,4 +176,28 @@ public final class StringUtil {
     public static boolean isNullOrEmpty(final String s) {
         return s == null || s.length() == 0;
     }
+
+    @SuppressWarnings("unused")
+    public static String[] split(final String in, final String sep) {
+        int seplen = sep.length();
+        int pos = in.indexOf(sep);
+        int count = 0;
+        while (pos != -1) {
+            pos = in.indexOf(sep, pos + seplen);
+            count++;
+        }
+        if (count == 0) return new String[] { in };
+        String[] res = new String[count + 1];
+        int lastpos = 0;
+        pos = in.indexOf(sep);
+        count = 0;
+        while (pos != -1) {
+            res[count] = in.substring(lastpos, pos);
+            lastpos = pos + seplen;
+            pos = in.indexOf(sep, lastpos);
+            count++;
+        }
+        res[count] = in.substring(lastpos);
+        return res;
+    }
 }
