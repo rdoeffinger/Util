@@ -185,6 +185,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             this.blockStart = blockStart;
             this.blockEnd = blockEnd;
             sem = new Semaphore(0);
+            error = null;
         }
 
         private final ConcurrentLinkedQueue<Deflater> deflaterCache;
@@ -195,27 +196,28 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         public Semaphore sem;
         public byte[] data;
         public int uncompSize;
+        public Exception error;
 
         @Override
         public void run() {
-            Deflater d = deflaterCache.poll();
-            if (d == null) d= new Deflater(9);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            //OutputStream stream = new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(baos));
-            OutputStream stream = new DeflaterOutputStream(baos, d);
-            DataOutputStream outstream = new DataOutputStream(new BufferedOutputStream(stream));
             try {
+                Deflater d = deflaterCache.poll();
+                if (d == null) d = new Deflater(9);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                //OutputStream stream = new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(baos));
+                OutputStream stream = new DeflaterOutputStream(baos, d);
+                DataOutputStream outstream = new DataOutputStream(new BufferedOutputStream(stream));
                 for (int i = blockStart; i < blockEnd; i++) {
                     serializer.write(outstream, list.get(i));
                 }
                 outstream.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                data = baos.toByteArray();
+                uncompSize = outstream.size();
+                d.reset();
+                deflaterCache.add(d);
+            } catch (Exception e) {
+                error = e;
             }
-            data = baos.toByteArray();
-            uncompSize = outstream.size();
-            d.reset();
-            deflaterCache.add(d);
             sem.release();
         }
     }
@@ -265,6 +267,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+                if (b.error != null) throw new RuntimeException(b.error);
                 maxBlock = Math.max(maxBlock, b.uncompSize);
                 minBlock = Math.min(minBlock, b.uncompSize);
                 sumBlock += b.uncompSize;
