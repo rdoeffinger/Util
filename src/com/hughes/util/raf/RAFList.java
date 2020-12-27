@@ -20,6 +20,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.RandomAccess;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -174,9 +175,11 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     }
 
     private static class BlockCompressor<T> implements Runnable {
-        public BlockCompressor(final List<T> list,
+        public BlockCompressor(final ConcurrentLinkedQueue<Deflater> deflaterCache,
+                               final List<T> list,
                                final RAFListSerializer<T> serializer,
                                int blockStart, int blockEnd) {
+            this.deflaterCache = deflaterCache;
             this.list = list;
             this.serializer = serializer;
             this.blockStart = blockStart;
@@ -184,6 +187,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             sem = new Semaphore(0);
         }
 
+        private final ConcurrentLinkedQueue<Deflater> deflaterCache;
         private final List<T> list;
         private final RAFListSerializer<T> serializer;
         private final int blockStart;
@@ -194,9 +198,11 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
         @Override
         public void run() {
+            Deflater d = deflaterCache.poll();
+            if (d == null) d= new Deflater(9);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             //OutputStream stream = new LZMA2Options().getOutputStream(new FinishableWrapperOutputStream(baos));
-            OutputStream stream = new DeflaterOutputStream(baos, new Deflater(9));
+            OutputStream stream = new DeflaterOutputStream(baos, d);
             DataOutputStream outstream = new DataOutputStream(new BufferedOutputStream(stream));
             try {
                 for (int i = blockStart; i < blockEnd; i++) {
@@ -208,6 +214,8 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             }
             data = baos.toByteArray();
             uncompSize = outstream.size();
+            d.reset();
+            deflaterCache.add(d);
             sem.release();
         }
     }
@@ -228,11 +236,12 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
 
         final ArrayList<BlockCompressor<T>> blocks = new ArrayList<>(blockCnt);
         if (compress) {
+            ConcurrentLinkedQueue<Deflater> deflaterCache = new ConcurrentLinkedQueue<>();
             ExecutorService e = Executors.newCachedThreadPool();
             for (int i = 0; i < blockCnt; i++) {
                 int start = i * block_size;
                 int end = Math.min(start + block_size, list.size());
-                BlockCompressor<T> bb = new BlockCompressor<>(list, serializer, start, end);
+                BlockCompressor<T> bb = new BlockCompressor<>(deflaterCache, list, serializer, start, end);
                 e.execute(bb);
                 blocks.add(bb);
             }
