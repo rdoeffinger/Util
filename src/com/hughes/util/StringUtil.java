@@ -174,7 +174,7 @@ public final class StringUtil {
 
     @SuppressWarnings("unused")
     public static boolean isNullOrEmpty(final String s) {
-        return s == null || s.length() == 0;
+        return s == null || s.isEmpty();
     }
 
     @SuppressWarnings("unused")

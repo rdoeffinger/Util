@@ -239,15 +239,15 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         final ArrayList<BlockCompressor<T>> blocks = new ArrayList<>(blockCnt);
         if (compress) {
             ConcurrentLinkedQueue<Deflater> deflaterCache = new ConcurrentLinkedQueue<>();
-            ExecutorService e = Executors.newCachedThreadPool();
-            for (int i = 0; i < blockCnt; i++) {
-                int start = i * block_size;
-                int end = Math.min(start + block_size, list.size());
-                BlockCompressor<T> bb = new BlockCompressor<>(deflaterCache, list, serializer, start, end);
-                e.execute(bb);
-                blocks.add(bb);
+            try (ExecutorService e = Executors.newCachedThreadPool()) {
+                for (int i = 0; i < blockCnt; i++) {
+                    int start = i * block_size;
+                    int end = Math.min(start + block_size, list.size());
+                    BlockCompressor<T> bb = new BlockCompressor<>(deflaterCache, list, serializer, start, end);
+                    e.execute(bb);
+                    blocks.add(bb);
+                }
             }
-            e.shutdown();
         }
 
         int maxBlock = 0;
