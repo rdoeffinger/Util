@@ -17,6 +17,7 @@ package com.hughes.util;
 import java.io.DataInput;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public final class DataInputBuffer implements DataInput {
     public final ByteBuffer b;
@@ -97,11 +98,7 @@ public final class DataInputBuffer implements DataInput {
     public void readFully(byte[] buf) { b.get(buf); }
 
     public String asString() {
-        try {
-            return new String(b.array(), b.arrayOffset(), b.limit(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Missing UTF-8 support?!", e);
-        }
+        return new String(b.array(), b.arrayOffset(), b.limit(), StandardCharsets.UTF_8);
     }
 
     public DataInputBuffer rewind() {
