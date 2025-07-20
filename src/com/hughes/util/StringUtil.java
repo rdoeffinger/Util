@@ -111,11 +111,7 @@ public final class StringUtil {
                     break;
             }
         }
-        try {
-            return bytes.toString("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Missing UTF-8 support?!", e);
-        }
+        return bytes.toString(StandardCharsets.UTF_8);
     }
 
     public static void writeVarInt(DataOutput f, int v) throws IOException {

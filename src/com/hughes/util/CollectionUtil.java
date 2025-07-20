@@ -23,7 +23,7 @@ public final class CollectionUtil {
     public static String join(final Collection<?> list, final String inbetween) {
         final StringBuilder builder = new StringBuilder();
         for (final Object object : list) {
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 builder.append(inbetween);
             }
             builder.append(object);
