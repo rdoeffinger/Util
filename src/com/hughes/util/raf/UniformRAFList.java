@@ -114,11 +114,6 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     throws IOException {
         return new UniformRAFList<>(in, serializer);
     }
-    public static <T> UniformRAFList<T> create(final DataInputBuffer in,
-            final RAFSerializer<T> serializer)
-    throws IOException {
-        return new UniformRAFList<>(in, RAFList.getWrapper(serializer));
-    }
 
     private static long getOffset(DataOutput out) throws IOException {
         if (out instanceof RandomAccessFile)
@@ -142,20 +137,5 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
                                            + " bytes, should have written " + datumSize);
             }
         }
-    }
-
-    public static <T> void write(final RandomAccessFile raf,
-                                 final Collection<T> list, final RAFSerializer<T> serializer,
-                                 final int datumSize) throws IOException {
-        write(raf, list, new RAFListSerializer<T>() {
-            @Override
-            public T read(DataInput raf, final int readIndex) throws IOException {
-                return serializer.read(raf);
-            }
-            @Override
-            public void write(DataOutput raf, T t) throws IOException {
-                serializer.write(raf, t);
-            }
-        }, datumSize);
     }
 }

@@ -23,25 +23,4 @@ public interface RAFListSerializer<T> {
     void write(final DataOutput raf, final T t) throws IOException;
 
     T read(final DataInput raf, final int readIndex) throws IOException;
-
-    final class Wrapper<T> implements RAFListSerializer<T> {
-
-        private final RAFSerializer<T> serializer;
-
-        public Wrapper(final RAFSerializer<T> serializer) {
-            this.serializer = serializer;
-        }
-
-        @Override
-        public T read(DataInput raf, int readIndex) throws IOException {
-            return serializer.read(raf);
-        }
-
-        @Override
-        public void write(DataOutput raf, T t) throws IOException {
-            serializer.write(raf, t);
-        }
-
-    }
-
 }

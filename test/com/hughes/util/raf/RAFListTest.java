@@ -31,14 +31,14 @@ import junit.framework.TestCase;
 
 public class RAFListTest extends TestCase {
 
-    RAFSerializer<String> STRING = new RAFSerializer<String>() {
+    RAFListSerializer<String> STRING = new RAFListSerializer<String>() {
         @Override
         public void write(DataOutput raf, String t) throws IOException {
             raf.writeUTF(t);
         }
 
         @Override
-        public String read(DataInput raf) throws IOException {
+        public String read(DataInput raf, int index) throws IOException {
             return raf.readUTF();
         }
     };
@@ -47,7 +47,7 @@ public class RAFListTest extends TestCase {
         testFileList(STRING);
     }
 
-    public void testFileList(final RAFSerializer<String> serializer) throws IOException {
+    public void testFileList(final RAFListSerializer<String> serializer) throws IOException {
         final File file = File.createTempFile("asdf", "asdf");
         file.deleteOnExit();
         try (final RandomAccessFile raf = new RandomAccessFile(file, "rw")) {

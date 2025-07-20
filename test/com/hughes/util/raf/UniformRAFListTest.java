@@ -31,20 +31,20 @@ import junit.framework.TestCase;
 
 public class UniformRAFListTest extends TestCase {
 
-    RAFSerializer<String> STRING = new RAFSerializer<String>() {
+    RAFListSerializer<String> STRING = new RAFListSerializer<String>() {
         @Override
         public void write(DataOutput raf, String t) throws IOException {
             raf.writeUTF(t);
         }
 
         @Override
-        public String read(DataInput raf) throws IOException {
+        public String read(DataInput raf, int index) throws IOException {
             return raf.readUTF();
         }
     };
 
     public void testFileList() throws IOException {
-        final RAFSerializer<String> serializer = STRING;
+        final RAFListSerializer<String> serializer = STRING;
 
         final File file = File.createTempFile("asdf", "asdf");
         file.deleteOnExit();

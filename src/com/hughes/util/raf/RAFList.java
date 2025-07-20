@@ -168,16 +168,6 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
         return new RAFList<>(in, serializer, version, debugstr);
     }
 
-    /**
-     * Same, but deserialization ignores indices.
-     */
-    public static <T> RAFList<T> create(final DataInputBuffer in,
-                                        final RAFSerializer<T> serializer,
-                                        int version, String debugstr)
-            throws IOException {
-        return new RAFList<>(in, getWrapper(serializer), version, debugstr);
-    }
-
     private static class BlockCompressor<T> implements Runnable {
         public BlockCompressor(final ConcurrentLinkedQueue<Deflater> deflaterCache,
                                final List<T> list,
@@ -306,22 +296,4 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     throws IOException {
         write(raf, list, serializer, 1, false);
     }
-    public static <T> void write(final RandomAccessFile raf,
-                                 final List<T> list, final RAFSerializer<T> serializer,
-                                 int block_size, boolean compress)
-    throws IOException {
-        write(raf, list, getWrapper(serializer), block_size, compress);
-    }
-
-    public static <T> void write(final RandomAccessFile raf,
-                                 final List<T> list, final RAFSerializer<T> serializer)
-    throws IOException {
-        write(raf, list, getWrapper(serializer), 1, false);
-    }
-
-    public static <T> RAFListSerializer<T> getWrapper(final RAFSerializer<T> serializer) {
-        return new RAFListSerializer.Wrapper<>(serializer);
-    }
-
-
 }
