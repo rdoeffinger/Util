@@ -36,8 +36,15 @@ public final class DataInputBuffer implements DataInput {
         return fileOffset;
     }
 
+    public long getFilePositionIfAvailable() {
+        return fileOffset < 0 ? fileOffset : fileOffset + b.position();
+    }
+
     public long getFilePosition() {
-        return fileOffset + b.position();
+        if (fileOffset < 0) {
+            throw new RuntimeException("getFilePosition called for buffer with no file position!");
+        }
+        return getFilePositionIfAvailable();
     }
 
     public int limit() {
@@ -45,7 +52,7 @@ public final class DataInputBuffer implements DataInput {
     }
 
     public DataInputBuffer slice(int size) {
-        DataInputBuffer res = new DataInputBuffer(b.slice(), getFilePosition());
+        DataInputBuffer res = new DataInputBuffer(b.slice(), getFilePositionIfAvailable());
         res.b.limit(size);
         skipBytes(size);
         return res;

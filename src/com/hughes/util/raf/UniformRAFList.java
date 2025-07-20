@@ -43,11 +43,14 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
         size = in.readInt();
         datumSize = in.readInt();
         int dataSize = size * datumSize;
-        endOffset = in.getFilePosition() + dataSize;
+        endOffset = in.getFilePosition() >= 0 ? in.getFilePosition() + dataSize : -1;
         dataInput = in.slice(dataSize);
     }
 
     public long getEndOffset() {
+        if (endOffset < 0) {
+            throw new RuntimeException("getEndOffset called for input buffer with unknown file position");
+        }
         return endOffset;
     }
 

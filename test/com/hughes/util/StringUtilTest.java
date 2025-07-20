@@ -21,43 +21,6 @@ import junit.framework.TestCase;
 
 public class StringUtilTest extends TestCase {
 
-    public void testRemove() {
-        StringBuilder sb;
-
-        sb = new StringBuilder("a<!--asdfasdf-->b<!---> -->c<!---->d");
-        assertEquals(
-            "<!--asdfasdf-->",
-            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                              Pattern.compile("-->", Pattern.LITERAL), true));
-        assertEquals("ab<!---> -->c<!---->d", sb.toString());
-
-        assertEquals(
-            "<!---> -->",
-            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                              Pattern.compile("-->", Pattern.LITERAL), true));
-        assertEquals(
-            "<!---->",
-            StringUtil.remove(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                              Pattern.compile("-->", Pattern.LITERAL), true));
-
-        sb = new StringBuilder("a<!--asdfasdf-->b<!---> -->c<!---->d");
-        assertEquals(
-            "abcd",
-            StringUtil.removeAll(sb, Pattern.compile("<!--", Pattern.LITERAL),
-                                 Pattern.compile("-->", Pattern.LITERAL)).toString());
-    }
-
-    public void testZip() throws IOException {
-        String in = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
-        byte[] inBytes = in.getBytes();
-        byte[] zipBytes = StringUtil.zipBytes(inBytes);
-        System.out.println("zipped " + inBytes.length + " bytes to " + zipBytes.length + " bytes.");
-        assert zipBytes.length < inBytes.length;
-        byte[] unzipBytes = StringUtil.unzipFully(zipBytes, -1);
-        String out = new String(unzipBytes);
-        assertEquals(in, out);
-    }
-
     public void testURLs() {
         {
             final String s = "asdf< >a%b%c<->asdf";

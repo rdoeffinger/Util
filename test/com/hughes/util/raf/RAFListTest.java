@@ -14,20 +14,37 @@
 
 package com.hughes.util.raf;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.hughes.util.DataInputBuffer;
 
 import junit.framework.TestCase;
 
 public class RAFListTest extends TestCase {
 
+    RAFSerializer<String> STRING = new RAFSerializer<String>() {
+        @Override
+        public void write(DataOutput raf, String t) throws IOException {
+            raf.writeUTF(t);
+        }
+
+        @Override
+        public String read(DataInput raf) throws IOException {
+            return raf.readUTF();
+        }
+    };
+
     public void testFileListString() throws IOException {
-        testFileList(RAFSerializer.STRING);
+        testFileList(STRING);
     }
 
     public void testFileList(final RAFSerializer<String> serializer) throws IOException {
@@ -44,11 +61,12 @@ public class RAFListTest extends TestCase {
 
             raf.seek(0);
             assertEquals("Hello World!", raf.readUTF());
-            final RAFList<String> l1Copy = RAFList.create(raf.getChannel(),
-                                           serializer, raf.getFilePointer(), 7, "");
+            MappedByteBuffer wholefile = raf.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, raf.length());
+            DataInputBuffer in = new DataInputBuffer(wholefile, 0);
+            in.skipBytes((int)raf.getFilePointer());
+            final RAFList<String> l1Copy = RAFList.create(in, serializer, 7, "");
             assertEquals(l1, l1Copy);
-            final RAFList<String> l2Copy = RAFList.create(raf.getChannel(),
-                                           serializer, l1Copy.getEndOffset(), 7, "");
+            final RAFList<String> l2Copy = RAFList.create(in, serializer, 7, "");
             assertEquals(l2, l2Copy);
             raf.seek(l2Copy.getEndOffset());
             assertEquals("Goodbye World!", raf.readUTF());
@@ -62,13 +80,15 @@ public class RAFListTest extends TestCase {
 
             raf.writeUTF("Hello World!");
             final List<String> l1 = Collections.emptyList();
-            RAFList.write(raf, l1, RAFSerializer.STRING);
+            RAFList.write(raf, l1, STRING);
             raf.writeUTF("Goodbye World!");
 
             raf.seek(0);
             assertEquals("Hello World!", raf.readUTF());
-            final RAFList<String> l1Copy = RAFList.create(raf.getChannel(),
-                                           RAFSerializer.STRING, raf.getFilePointer(), 7, "");
+            MappedByteBuffer wholefile = raf.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, raf.length());
+            DataInputBuffer in = new DataInputBuffer(wholefile, 0);
+            in.skipBytes((int)raf.getFilePointer());
+            final RAFList<String> l1Copy = RAFList.create(in, STRING, 7, "");
             assertEquals(l1, l1Copy);
             raf.seek(l1Copy.getEndOffset());
             assertEquals("Goodbye World!", raf.readUTF());

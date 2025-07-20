@@ -46,7 +46,7 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
     private final RAFListSerializer<T> serializer;
     private final RAFListSerializerSkippable<T> skippableSerializer;
     private final int size;
-    private final int dataSize;
+    private final long endOffset;
     private final int version;
     private final int blockSize;
     private final boolean compress;
@@ -60,6 +60,9 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
                     final RAFListSerializer<T> serializer,
                     int version, String debugstr)
     throws IOException {
+        if (in.getStartFileOffset() < 0) {
+            throw new RuntimeException("RAFList needs a value fileOffset!");
+        }
         this.debugstr = debugstr;
             this.serializer = serializer;
             skippableSerializer = serializer instanceof RAFListSerializerSkippable ? (RAFListSerializerSkippable<T>)serializer : null;
@@ -77,12 +80,13 @@ public class RAFList<T> extends AbstractList<T> implements RandomAccess, Chunked
             int tocSize = ((size + blockSize - 1) / blockSize + 1) * (version >= 7 ? INT_BYTES : LONG_BYTES);
             tocInput = in.slice(tocSize);
             tocInput.position(tocSize - (version >= 7 ? INT_BYTES : LONG_BYTES));
-            dataSize = (version >= 7 ? tocInput.readInt() : (int)(tocInput.readLong() - tocInput.getStartFileOffset())) - tocSize;
+            int dataSize = (version >= 7 ? tocInput.readInt() : (int)(tocInput.readLong() - tocInput.getStartFileOffset())) - tocSize;
             dataInput = in.slice(dataSize);
+            endOffset = in.getFilePosition();
     }
 
     public long getEndOffset() {
-        return dataInput.getFilePosition() + dataSize;
+        return endOffset;
     }
 
     @Override
