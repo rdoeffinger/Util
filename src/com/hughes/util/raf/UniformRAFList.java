@@ -109,8 +109,7 @@ public class UniformRAFList<T> extends AbstractList<T> implements RandomAccess, 
     }
 
     public static <T> UniformRAFList<T> create(final DataInputBuffer in,
-            final RAFListSerializer<T> serializer)
-    throws IOException {
+            final RAFListSerializer<T> serializer) {
         return new UniformRAFList<>(in, serializer);
     }
 
