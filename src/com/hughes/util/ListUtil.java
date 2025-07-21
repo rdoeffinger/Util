@@ -42,9 +42,4 @@ public final class ListUtil {
         list.set(i2, temp);
     }
 
-    public static <T> T fastRemoveWithReorder(final List<T> list, final int index) {
-        swap(list, index, list.size() - 1);
-        return list.remove(list.size() - 1);
-    }
-
 }

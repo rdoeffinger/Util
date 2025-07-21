@@ -14,7 +14,6 @@
 
 package com.hughes.util.raf;
 
-import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
