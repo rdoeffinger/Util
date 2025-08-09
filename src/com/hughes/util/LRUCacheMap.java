@@ -18,8 +18,6 @@ import java.util.LinkedHashMap;
 
 public class LRUCacheMap<K,V> extends LinkedHashMap<K, V> {
 
-    private static final long serialVersionUID = 197833078417223126L;
-
     private final int maxSize;
 
     public LRUCacheMap(final int maxSize) {
