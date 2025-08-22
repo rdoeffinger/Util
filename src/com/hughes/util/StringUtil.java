@@ -21,6 +21,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -110,7 +111,14 @@ public final class StringUtil {
                     break;
             }
         }
-        return bytes.toString(StandardCharsets.UTF_8);
+        final String res;
+        try {
+            // The StandardCharsets.UTF_8 version is not available in Java8
+            res = bytes.toString("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        return res;
     }
 
     public static void writeVarInt(DataOutput f, int v) throws IOException {
